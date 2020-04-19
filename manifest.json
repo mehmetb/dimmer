@@ -1,0 +1,46 @@
+{
+  "manifest_version": 2,
+  "name": "dimmer",
+  "version": "1.0.0",
+  "description": "A browser extension to dim web pages.",
+
+  "author": "Mehmet Baker",
+  "homepage_url": "https://mehmetb.github.io/dimmer",
+
+  "icons": {
+    "48": "icons/lightbulb-slash-solid.svg",
+    "96": "icons/lightbulb-slash-solid.svg"
+  },
+
+  "background": {
+    "scripts": ["background.js"]
+  },
+
+  "browser_action": {
+    "browser_style": true,
+    "default_title": "Dim page",
+    "default_popup": "/popup/popup.html",
+    "theme_icons": [
+      {
+        "light": "icons/browser-action-light.svg",
+        "dark": "icons/browser-action-dark.svg",
+        "size": 16
+      }, 
+      {
+        "light": "icons/browser-action-light.svg",
+        "dark": "icons/browser-action-dark.svg",
+        "size": 32
+      }
+    ]
+  },
+
+  "commands": {
+    "toggle-dim": {
+      "suggested_key": {
+        "default": "Ctrl+Alt+N"
+      }
+    }
+  },
+
+  "permissions": ["activeTab"]
+}
