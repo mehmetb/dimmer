@@ -1,0 +1,32 @@
+{
+  "name": "dimmer",
+  "version": "1.0.0",
+  "description": "A browser extension to dim web pages",
+  "main": "index.js",
+  "scripts": {
+    "dev": "web-ext run --verbose -u https://mehmetbaker.dev",
+    "dev-dark": "web-ext run --verbose -u https://mehmetbaker.dev -p dark-mode/",
+    "lint": "eslint content_scripts/*.js popup/*.js background.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mehmetb/dimmer.git"
+  },
+  "keywords": [
+    "dark",
+    "overlay"
+  ],
+  "author": "Mehmet Baker <mehmet.baker@gmail.com> (https://mehmetbaker.dev)",
+  "license": "GPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/mehmetb/dimmer/issues"
+  },
+  "homepage": "https://github.com/mehmetb/dimmer#readme",
+  "devDependencies": {
+    "eslint": "^6.8.0",
+    "eslint-config-airbnb-base": "^14.1.0",
+    "eslint-plugin-import": "^2.20.1",
+    "web-ext": "^4.1.0"
+  }
+}

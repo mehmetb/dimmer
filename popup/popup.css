@@ -1,0 +1,87 @@
+* {
+  box-sizing: border-box;
+  text-align: start;
+}
+
+body {
+  overflow: hidden;
+}
+
+footer {
+  background-color: rgba(0, 0, 0, 0.06);
+  border-top: 1px solid rgba(0, 0, 0, 0.15);
+  color: #1a1a1a;
+  display: flex;
+  flex-direction: row;
+  height: 41px;
+  margin-top: -1px;
+  padding: 0;
+}
+
+div.separator {
+  background-color: rgba(0, 0, 0, 0.1);
+  width: 1px;
+  z-index: 99;
+  color: #1a1a1a;
+  cursor: default;
+  font: caption;
+  unicode-bidi: isolate;
+}
+
+button {
+  color: inherit;
+  background-color: unset;
+  font: inherit;
+  text-shadow: inherit;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  border: none;
+
+  flex: 1 1 auto;
+  height: 100%;
+  margin: 0 -1px;
+  padding: 12px;
+  text-align: center;
+
+  white-space: unset;
+  text-indent: 0;
+  display: inline-block;
+
+  padding-block-start: 0px;
+  padding-inline-end: 8px;
+  padding-block-end: 0px;
+  padding-inline-start: 8px;
+
+  cursor: default;
+  user-select: none;
+
+  text-transform: initial;
+  word-spacing: initial;
+  letter-spacing: initial;
+  width: 50%;
+}
+
+button.primary {
+  background-color: #0996f8;
+  box-shadow: 0 1px 0 #0670cc inset;
+  color: #fff;
+}
+
+button.primary:hover {
+  background-color: #0670cc;
+  box-shadow: 0 1px 0 #005bab inset;
+}
+
+button.primary:hover:active {
+  background-color: #005bab;
+  box-shadow: 0 1px 0 #004480 inset;
+}
+
+button.default:hover {
+  background-color: rgba(0, 0, 0, 0.06);
+}
+
+button.default:hover:active {
+  background-color: rgba(0, 0, 0, 0.1);
+}
