@@ -4,7 +4,7 @@ const loadedTabs = new Set();
 
 async function executeContentScript(tab) {
   if (!loadedTabs.has(tab.id)) {
-    await browser.tabs.executeScript(tab.id, { file: '/content_scripts/dimmer-overlay.js' });
+    await browser.tabs.executeScript(tab.id, { file: '/content_scripts/overlay.js' });
 
     loadedTabs.add(tab.id);
   }
