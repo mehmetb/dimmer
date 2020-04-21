@@ -4,6 +4,7 @@
   "description": "A browser extension to dim web pages",
   "main": "index.js",
   "scripts": {
+    "build": "web-ext build -i package.json README.md yarn.lock dark-mode demo.gif",
     "dev": "web-ext run --verbose -u https://mehmetbaker.dev",
     "dev-dark": "web-ext run --verbose -u https://mehmetbaker.dev -p dark-mode/",
     "lint": "eslint content_scripts/*.js popup/*.js background.js",
