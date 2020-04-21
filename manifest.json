@@ -22,13 +22,13 @@
     "default_popup": "/popup/popup.html",
     "theme_icons": [
       {
-        "light": "icons/browser-action-dark.svg",
-        "dark": "icons/browser-action.svg",
+        "light": "icons/browser-action-light.svg",
+        "dark": "icons/browser-action-dark.svg",
         "size": 16
       }, 
       {
-        "light": "icons/browser-action-dark.svg",
-        "dark": "icons/browser-action.svg",
+        "light": "icons/browser-action-light.svg",
+        "dark": "icons/browser-action-dark.svg",
         "size": 32
       }
     ]
