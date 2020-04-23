@@ -19,31 +19,6 @@
 
 /* global browser */
 
-function toggleOverlay(state) {
-  return new Promise((resolve) => {
-    // Toggle the flag
-    state.isDimmed = !state.isDimmed;
-
-    window.requestAnimationFrame(() => {
-      // Set transition
-      state.container.style.transition = 'opacity .3s';
-
-      // Reset the transition property once the transition has ended
-      state.container.addEventListener('transitionend', () => {
-        state.container.style.transition = '';
-      }, { once: true });
-
-      // Set the opacity of overlay
-      state.container.style.opacity = state.isDimmed ? state.opacity : '0';
-
-      // Resolve the promise
-      resolve({
-        opacity: state.opacity,
-        isDimmed: state.isDimmed,
-      });
-    });
-  });
-}
 
 (function main() {
   const state = {
@@ -55,6 +30,32 @@ function toggleOverlay(state) {
   if (window.hasRun) {
     return;
   }
+
+  const toggleOverlay = function toggleOverlay() {
+    return new Promise((resolve) => {
+      // Toggle the flag
+      state.isDimmed = !state.isDimmed;
+
+      window.requestAnimationFrame(() => {
+        // Set transition
+        state.container.style.transition = 'opacity .3s';
+
+        // Reset the transition property once the transition has ended
+        state.container.addEventListener('transitionend', () => {
+          state.container.style.transition = '';
+        }, { once: true });
+
+        // Set the opacity of overlay
+        state.container.style.opacity = state.isDimmed ? state.opacity : '0';
+
+        // Resolve the promise
+        resolve({
+          opacity: state.opacity,
+          isDimmed: state.isDimmed,
+        });
+      });
+    });
+  };
 
   // Running for the first time here
   window.hasRun = true;
