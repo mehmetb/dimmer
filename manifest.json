@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "dimmer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A browser extension to dim web pages.",
 
   "author": "Mehmet Baker",

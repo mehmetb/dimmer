@@ -19,15 +19,8 @@
 
 /* global browser */
 
-const loadedTabs = new Set();
-
 async function executeContentScript(tab) {
-  if (!loadedTabs.has(tab.id)) {
-    await browser.tabs.executeScript(tab.id, { file: '/content_scripts/overlay.js' });
-
-    loadedTabs.add(tab.id);
-  }
-
+  await browser.tabs.executeScript(tab.id, { file: '/content_scripts/overlay.js' });
   return tab;
 }
 
@@ -83,9 +76,4 @@ browser.runtime.onMessage.addListener((message) => {
   }
 
   return Promise.resolve();
-});
-
-browser.tabs.onRemoved.addListener((tabId) => {
-  // Delete state of the removed tab
-  loadedTabs.delete(tabId);
 });
