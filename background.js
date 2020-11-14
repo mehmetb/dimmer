@@ -19,36 +19,32 @@
 
 /* global browser */
 
-async function executeContentScript(tab) {
-  await browser.tabs.executeScript(tab.id, { file: '/content_scripts/overlay.js' });
-  return tab;
-}
 
 async function toggleDim(tab) {
-  await executeContentScript(tab);
   await browser.tabs.sendMessage(tab.id, { command: 'toggle-dim', from: 'background', to: 'content_script' });
 }
 
-browser.commands.onCommand.addListener((commandName) => {
+async function getActiveTab() {
+  const tabs = await browser.tabs.query({ active: true, currentWindow: true });
+
+  if (tabs.length !== 1) {
+    throw new Error('Failed to get active tab');
+  }
+
+  return tabs[0];
+}
+
+async function handleCommand(commandName) {
   switch (commandName) {
     case 'toggle-dim': {
-      browser.tabs
-        .query({ active: true, currentWindow: true })
-        .then((tabs) => {
-          if (tabs.length !== 1) {
-            throw new Error('Couldn\'t query the active tab');
-          }
-
-          return toggleDim(tabs[0]);
-        })
-        .catch((ex) => console.error(ex.message));
-      break;
+      const activeTab = await getActiveTab();
+      return toggleDim(activeTab);
     }
 
     default:
-      break;
+      return Promise.resolve();
   }
-});
+}
 
 browser.runtime.onMessage.addListener((message) => {
   if (message.to !== 'background') {
@@ -72,8 +68,9 @@ browser.runtime.onMessage.addListener((message) => {
     }
 
     default:
-      break;
+      return Promise.resolve();
   }
+}
 
-  return Promise.resolve();
-});
+browser.commands.onCommand.addListener(handleCommand);
+browser.runtime.onMessage.addListener(handleMessage);
