@@ -25,9 +25,9 @@
   },
   "homepage": "https://github.com/mehmetb/dimmer#readme",
   "devDependencies": {
-    "eslint": "^6.8.0",
-    "eslint-config-airbnb-base": "^14.1.0",
-    "eslint-plugin-import": "^2.20.1",
-    "web-ext": "^4.1.0"
+    "eslint": "*",
+    "eslint-config-airbnb-base": "*",
+    "eslint-plugin-import": "*",
+    "web-ext": "*"
   }
 }
