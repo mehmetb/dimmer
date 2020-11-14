@@ -117,6 +117,28 @@
     return Promise.resolve(null);
   });
 
+  async function init() {
+    try {
+      const response = await browser.runtime.sendMessage({
+        command: 'query',
+        from: 'content_script',
+        to: 'background',
+      });
+
+      state.isDimmed = !!response.isDimmed;
+      state.opacity = String(response.opacity) || '0';
+      state.container.style.opacity = state.isDimmed ? state.opacity : '0';
+
+      setTimeout(() => {
+        state.container.style.transition = 'opacity .3s';
+      }, 300);
+    } catch (ex) {
+      console.error('Dimmer failed to initialize.');
+    }
+  }
+
+  init();
+
   function appendContainerToDOM() {
     if (!document.body) {
       setTimeout(appendContainerToDOM);
