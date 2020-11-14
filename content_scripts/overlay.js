@@ -19,7 +19,6 @@
 
 /* global browser */
 
-
 (function main() {
   const state = {
     opacity: '.7',
@@ -69,8 +68,6 @@
   state.container.style.zIndex = Number.MAX_SAFE_INTEGER;
   state.container.style.background = '#000';
   state.container.style.opacity = '0';
-  state.container.style.transition = 'opacity .3s';
-  document.body.appendChild(state.container);
 
   browser.runtime.onMessage.addListener((message) => {
     if (message.to !== 'content_script') {
@@ -119,4 +116,37 @@
 
     return Promise.resolve(null);
   });
+
+  async function init() {
+    try {
+      const response = await browser.runtime.sendMessage({
+        command: 'query',
+        from: 'content_script',
+        to: 'background',
+      });
+
+      state.isDimmed = !!response.isDimmed;
+      state.opacity = String(response.opacity) || '0';
+      state.container.style.opacity = state.isDimmed ? state.opacity : '0';
+
+      setTimeout(() => {
+        state.container.style.transition = 'opacity .3s';
+      }, 300);
+    } catch (ex) {
+      console.error('Dimmer failed to initialize.');
+    }
+  }
+
+  init();
+
+  function appendContainerToDOM() {
+    if (!document.body) {
+      setTimeout(appendContainerToDOM);
+      return;
+    }
+
+    document.body.appendChild(state.container);
+  }
+
+  appendContainerToDOM();
 }());
