@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "dimmer",
-  "version": "1.0.1",
+  "version": "2.0.0",
   "description": "A browser extension to dim web pages.",
 
   "author": "Mehmet Baker",
@@ -42,5 +42,12 @@
     }
   },
 
-  "permissions": ["activeTab"]
+  "content_scripts": [
+    {
+      "js": ["content_scripts/overlay.js"],
+      "matches": ["<all_urls>"],
+      "match_about_blank": true,
+      "run_at": "document_start"
+    }
+  ]
 }
