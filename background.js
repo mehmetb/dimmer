@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Mehmet Baker
+ * Copyright 2020-2021 Mehmet Baker
  *
  * This file is part of dimmer.
  *
@@ -20,67 +20,121 @@
 /* global browser */
 
 /**
- * @typedef {object} DimState
+ * @typedef {object} TabState
  * @property {boolean} isDimmed
  * @property {number} opacity A number [0, 1]
+ * @property {boolean} [overrideGlobalState] If true, popup option 'Only for this tab' will be checked.
  */
 
 /**
- * Dim states of tabs.
- * Keys are tab ids and values are dim states.
- * @type {Map<number, DimState>}
+ * This state represents the state of all tabs that haven't selected 'Only this tab' option.
  */
-const states = new Map();
+const globalState = {
+  isDimmed: false,
+  opacity: 0.7,
+};
 
+/**
+ * These states represent the states of tabs that checked the 'Only this tab' option.
+ * Keys are tab ids and values are dim states.
+ * @type {Map<number, TabState>}
+ */
+const overriddenStates = new Map();
+
+/**
+ * Returns a tab state. If the option 'Only for this tab' is selected for the tab,
+ * then the overridden state will be returned. Otherwise the global state will be
+ * returned.
+ * @param {number} tabId Tab ID
+ * @returns {TabState}
+ */
 function getState(tabId) {
-  return states.get(tabId) || { isDimmed: false, opacity: 0.7 };
+  if (overriddenStates.has(tabId)) {
+    return {
+      ...overriddenStates.get(tabId),
+      overrideGlobalState: true,
+    };
+  }
+  return globalState;
 }
 
-function extendState(tabId, params) {
+/**
+ * Adds/updates the overridden states
+ * @param {number} tabId Tab ID.
+ * @param {*} params Prop(s) of TabState
+ */
+function extendState(tabId, params = {}) {
   const state = getState(tabId);
-  states.set(tabId, {
+  overriddenStates.set(tabId, {
     ...state,
     ...params,
   });
 }
 
-async function toggleDim(tab) {
-  console.debug('toggle dim', tab.id);
+/**
+ * Updates the state object in background script. Also updates the states of content
+ * scripts by sending them set-state commands.
+ * @param {number} tabId Tab ID
+ * @param {string|null} stateProp A property key of TabState
+ * @param {boolean|number} [propValue] A prop value of TabState
+ * @returns {Promise<void>}
+ */
+async function setState(tabId, stateProp, propValue) {
+  // If 'Only for this tab' option is selected, update the current tab only
+  if (overriddenStates.has(tabId)) {
+    const state = getState(tabId);
 
-  const state = getState(tab.id);
-  state.isDimmed = !state.isDimmed;
-  states.set(tab.id, state);
+    if (stateProp !== null) {
+      state[stateProp] = propValue;
+      overriddenStates.set(tabId, state);
+    }
 
-  await browser.tabs.sendMessage(tab.id, {
-    command: state.isDimmed ? 'dim' : 'undim',
+    await browser.tabs.sendMessage(tabId, {
+      command: 'set-state',
+      from: 'background',
+      to: 'content_script',
+      data: {
+        isDimmed: state.isDimmed,
+        opacity: state.opacity,
+      },
+    });
+    return;
+  }
+
+  // If 'Only for this tab' is NOT selected, then update all tabs but the overriddens.
+
+  if (stateProp !== null) {
+    globalState[stateProp] = propValue;
+  }
+
+  const allTabs = await browser.tabs.query({});
+  const promises = [];
+  const command = {
+    command: 'set-state',
     from: 'background',
     to: 'content_script',
-  });
+    data: {
+      isDimmed: globalState.isDimmed,
+      opacity: globalState.opacity,
+    },
+  };
+
+  for (const tab of allTabs) {
+    const isOverridden = overriddenStates.has(tab.id);
+    if (!isOverridden) {
+      const promise = browser.tabs.sendMessage(tab.id, command);
+      promises.push(promise);
+    }
+  }
+
+  await Promise.all(promises);
 }
 
-async function dim(tabId) {
-  console.debug('Dimming tab', tabId);
-  extendState(tabId, { isDimmed: true });
-  await browser.tabs.sendMessage(tabId, { command: 'dim', from: 'background', to: 'content_script' });
-}
-
-async function unDim(tabId) {
-  console.debug('Undimming tab', tabId);
-  extendState(tabId, { isDimmed: false });
-  await browser.tabs.sendMessage(tabId, { command: 'undim', from: 'background', to: 'content_script' });
-}
-
-async function setOpacity(tabId, opacity) {
-  console.debug('Setting opacity of tab', tabId);
-  extendState(tabId, { opacity });
-  await browser.tabs.sendMessage(tabId, {
-    command: 'set-opacity',
-    from: 'background',
-    to: 'content_script',
-    data: opacity,
-  });
-}
-
+/**
+ * Returns the current tab.
+ * @returns {object} Active Tab Object
+ * @see {@link https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/tabs/Tab}
+ */
 async function getActiveTab() {
   const tabs = await browser.tabs.query({ active: true, currentWindow: true });
 
@@ -91,18 +145,32 @@ async function getActiveTab() {
   return tabs[0];
 }
 
+/**
+ * Handle the keyboard shortcut. (See the manifest file for the default shortcut)
+ * @param {string} commandName
+ * @returns {Promise<void>}
+ */
 async function handleCommand(commandName) {
   switch (commandName) {
     case 'toggle-dim': {
       const activeTab = await getActiveTab();
-      return toggleDim(activeTab);
+      const state = getState(activeTab.id);
+      return setState(activeTab.id, 'isDimmed', !state.isDimmed);
     }
 
-    default:
+    default: {
       return Promise.resolve();
+    }
   }
 }
 
+/**
+ * Handles incoming messages from content scripts and popup window.
+ * @param {IncomingMessage} message
+ * @param {*} sender Sender tab. For more information please visit the link below.
+ * @see {@link https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/runtime/onMessage#parameters}
+ * @returns {Promise<void>}
+ */
 async function handleMessage(message, sender) {
   if (message.to !== 'background') {
     return Promise.resolve();
@@ -116,27 +184,44 @@ async function handleMessage(message, sender) {
     }
 
     case 'dim': {
-      return dim(activeTab.id);
+      return setState(activeTab.id, 'isDimmed', true);
     }
 
     case 'undim': {
-      return unDim(activeTab.id);
+      return setState(activeTab.id, 'isDimmed', false);
     }
 
     case 'set-opacity': {
-      return setOpacity(activeTab.id, message.data.opacity);
+      console.debug('setting opacity', message.data.opacity);
+      return setState(activeTab.id, 'opacity', message.data.opacity);
     }
 
-    default:
+    case 'override-global-state': {
+      extendState(activeTab.id);
       return Promise.resolve();
+    }
+
+    case 'remove-state-override': {
+      overriddenStates.delete(activeTab.id);
+      return setState(activeTab.id, null);
+    }
+
+    default: {
+      return Promise.resolve();
+    }
   }
 }
 
 function handleTabRemove(tabId) {
-  console.debug(`Removing dimmer state info of tab ${tabId}`);
-  states.delete(tabId);
+  overriddenStates.delete(tabId);
 }
 
 browser.commands.onCommand.addListener(handleCommand);
 browser.runtime.onMessage.addListener(handleMessage);
 browser.tabs.onRemoved.addListener(handleTabRemove);
+
+/**
+ * @typedef {object} IncomingMessage
+ * @property {string} command
+ * @property {{ opacity?: number }} [data]
+ */
