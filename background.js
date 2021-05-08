@@ -19,6 +19,12 @@
 
 /* global browser */
 
+/**
+ * @typedef {object} TabState
+ * @property {boolean} isDimmed
+ * @property {number} opacity A number [0, 1]
+ * @property {boolean} [overrideGlobalState] If true, popup option 'Only for this tab' will be checked.
+ */
 
 /**
  * This state represents the state of all tabs that haven't selected 'Only this tab' option.
@@ -28,8 +34,20 @@ const globalState = {
   opacity: 0.7,
 };
 
+/**
+ * These states represent the states of tabs that checked the 'Only this tab' option.
+ * Keys are tab ids and values are dim states.
+ * @type {Map<number, TabState>}
+ */
 const overriddenStates = new Map();
 
+/**
+ * Returns a tab state. If the option 'Only for this tab' is selected for the tab,
+ * then the overridden state will be returned. Otherwise the global state will be
+ * returned.
+ * @param {number} tabId Tab ID
+ * @returns {TabState}
+ */
 function getState(tabId) {
   if (overriddenStates.has(tabId)) {
     return {
@@ -40,6 +58,11 @@ function getState(tabId) {
   return globalState;
 }
 
+/**
+ * Adds/updates the overridden states
+ * @param {number} tabId Tab ID.
+ * @param {*} params Prop(s) of TabState
+ */
 function extendState(tabId, params = {}) {
   const state = getState(tabId);
   overriddenStates.set(tabId, {
@@ -48,6 +71,14 @@ function extendState(tabId, params = {}) {
   });
 }
 
+/**
+ * Updates the state object in background script. Also updates the states of content
+ * scripts by sending them set-state commands.
+ * @param {number} tabId Tab ID
+ * @param {string|null} stateProp A property key of TabState
+ * @param {boolean|number} [propValue] A prop value of TabState
+ * @returns {Promise<void>}
+ */
 async function setState(tabId, stateProp, propValue) {
   // If 'Only for this tab' option is selected, update the current tab only
   if (overriddenStates.has(tabId)) {
@@ -99,6 +130,11 @@ async function setState(tabId, stateProp, propValue) {
   await Promise.all(promises);
 }
 
+/**
+ * Returns the current tab.
+ * @returns {object} Active Tab Object
+ * @see {@link https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/tabs/Tab}
+ */
 async function getActiveTab() {
   const tabs = await browser.tabs.query({ active: true, currentWindow: true });
 
@@ -109,6 +145,11 @@ async function getActiveTab() {
   return tabs[0];
 }
 
+/**
+ * Handle the keyboard shortcut. (See the manifest file for the default shortcut)
+ * @param {string} commandName
+ * @returns {Promise<void>}
+ */
 async function handleCommand(commandName) {
   switch (commandName) {
     case 'toggle-dim': {
@@ -123,6 +164,13 @@ async function handleCommand(commandName) {
   }
 }
 
+/**
+ * Handles incoming messages from content scripts and popup window.
+ * @param {IncomingMessage} message
+ * @param {*} sender Sender tab. For more information please visit the link below.
+ * @see {@link https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/runtime/onMessage#parameters}
+ * @returns {Promise<void>}
+ */
 async function handleMessage(message, sender) {
   if (message.to !== 'background') {
     return Promise.resolve();
@@ -172,3 +220,8 @@ browser.commands.onCommand.addListener(handleCommand);
 browser.runtime.onMessage.addListener(handleMessage);
 browser.tabs.onRemoved.addListener(handleTabRemove);
 
+/**
+ * @typedef {object} IncomingMessage
+ * @property {string} command
+ * @property {{ opacity?: number }} [data]
+ */
