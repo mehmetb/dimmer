@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Mehmet Baker
+ * Copyright 2020-2021 Mehmet Baker
  *
  * This file is part of dimmer.
  *
@@ -75,36 +75,14 @@
     }
 
     switch (message.command) {
-      case 'toggle-dim': {
-        return toggleOverlay(state);
-      }
-
-      case 'query': {
-        const { isDimmed, opacity } = state;
-        return Promise.resolve({ isDimmed, opacity });
-      }
-
-      case 'set-opacity': {
-        state.opacity = message.data;
-
+      case 'set-state': {
         if (state.isDimmed) {
+          state.opacity = message.data.opacity;
           state.container.style.opacity = state.opacity;
         }
 
-        break;
-      }
-
-      case 'dim': {
-        if (state.isDimmed === false) {
-          return toggleOverlay(state);
-        }
-
-        break;
-      }
-
-      case 'undim': {
-        if (state.isDimmed === true) {
-          return toggleOverlay(state);
+        if (state.isDimmed !== message.data.isDimmed) {
+          toggleOverlay(state);
         }
 
         break;

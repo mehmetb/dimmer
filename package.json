@@ -4,7 +4,7 @@
   "description": "A browser extension to dim web pages",
   "main": "index.js",
   "scripts": {
-    "build": "web-ext build -i package.json README.md yarn.lock dark-mode demo.gif _config.yml",
+    "build": "web-ext build --overwrite-dest -i package.json README.md yarn.lock dark-mode demo.gif _config.yml",
     "dev": "web-ext run --verbose -u https://mehmetbaker.dev",
     "dev-dark": "web-ext run --verbose -u https://mehmetbaker.dev -p dark-mode/",
     "lint": "eslint content_scripts/*.js popup/*.js background.js",
@@ -26,9 +26,9 @@
   },
   "homepage": "https://github.com/mehmetb/dimmer#readme",
   "devDependencies": {
-    "eslint": "*",
+    "eslint": "^7.25.0",
     "eslint-config-airbnb-base": "*",
     "eslint-plugin-import": "*",
-    "web-ext": "*"
+    "web-ext": "^6.1.0"
   }
 }
