@@ -28,16 +28,49 @@ const globalState = {
   opacity: 0.7,
 };
 
+const overriddenStates = new Map();
 
 function getState(tabId) {
-
+  if (overriddenStates.has(tabId)) {
+    return {
+      ...overriddenStates.get(tabId),
+      overrideGlobalState: true,
+    };
+  }
   return globalState;
 }
 
+function extendState(tabId, params = {}) {
+  const state = getState(tabId);
+  overriddenStates.set(tabId, {
+    ...state,
+    ...params,
+  });
+}
 
 async function setState(tabId, stateProp, propValue) {
+  // If 'Only for this tab' option is selected, update the current tab only
+  if (overriddenStates.has(tabId)) {
+    const state = getState(tabId);
 
+    if (stateProp !== null) {
+      state[stateProp] = propValue;
+      overriddenStates.set(tabId, state);
+    }
 
+    await browser.tabs.sendMessage(tabId, {
+      command: 'set-state',
+      from: 'background',
+      to: 'content_script',
+      data: {
+        isDimmed: state.isDimmed,
+        opacity: state.opacity,
+      },
+    });
+    return;
+  }
+
+  // If 'Only for this tab' is NOT selected, then update all tabs but the overriddens.
 
   if (stateProp !== null) {
     globalState[stateProp] = propValue;
@@ -56,8 +89,11 @@ async function setState(tabId, stateProp, propValue) {
   };
 
   for (const tab of allTabs) {
-    const promise = browser.tabs.sendMessage(tab.id, command);
-    promises.push(promise);
+    const isOverridden = overriddenStates.has(tab.id);
+    if (!isOverridden) {
+      const promise = browser.tabs.sendMessage(tab.id, command);
+      promises.push(promise);
+    }
   }
 
   await Promise.all(promises);
@@ -83,8 +119,8 @@ async function handleCommand(commandName) {
 
     default: {
       return Promise.resolve();
+    }
   }
-}
 }
 
 async function handleMessage(message, sender) {
@@ -112,12 +148,27 @@ async function handleMessage(message, sender) {
       return setState(activeTab.id, 'opacity', message.data.opacity);
     }
 
+    case 'override-global-state': {
+      extendState(activeTab.id);
+      return Promise.resolve();
+    }
+
+    case 'remove-state-override': {
+      overriddenStates.delete(activeTab.id);
+      return setState(activeTab.id, null);
+    }
+
     default: {
       return Promise.resolve();
     }
   }
 }
 
+function handleTabRemove(tabId) {
+  overriddenStates.delete(tabId);
+}
 
 browser.commands.onCommand.addListener(handleCommand);
 browser.runtime.onMessage.addListener(handleMessage);
+browser.tabs.onRemoved.addListener(handleTabRemove);
+

@@ -22,6 +22,7 @@
 const undimButton = document.querySelector('button.default');
 const dimButton = document.querySelector('button.primary');
 const rangeInput = document.querySelector('input[type=range]');
+const checkbox = document.querySelector('input[type=checkbox]');
 
 async function sendCommandToActiveTab(command, data) {
   return browser.runtime.sendMessage({
@@ -30,6 +31,16 @@ async function sendCommandToActiveTab(command, data) {
     from: 'popup',
     to: 'background',
   });
+}
+
+async function loadState() {
+  try {
+    const { opacity, overrideGlobalState = false } = await sendCommandToActiveTab('query');
+    rangeInput.value = opacity;
+    checkbox.checked = overrideGlobalState;
+  } catch (ex) {
+    console.error(ex.message);
+  }
 }
 
 function onRangeChanged() {
@@ -46,17 +57,19 @@ async function onDimClicked() {
   window.close();
 }
 
+async function onCheckboxChange() {
+  if (checkbox.checked) {
+    await sendCommandToActiveTab('override-global-state');
+    return;
+  }
+
+  await sendCommandToActiveTab('remove-state-override');
+  await loadState();
+}
+
 rangeInput.addEventListener('input', onRangeChanged);
 dimButton.addEventListener('click', onDimClicked);
 undimButton.addEventListener('click', onUndimClicked);
+checkbox.addEventListener('change', onCheckboxChange);
 
-async function init() {
-  try {
-    const { opacity } = await sendCommandToActiveTab('query');
-    rangeInput.value = opacity;
-  } catch (ex) {
-    console.error(ex.message);
-  }
-}
-
-init();
+loadState();
