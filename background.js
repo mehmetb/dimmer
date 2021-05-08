@@ -19,66 +19,48 @@
 
 /* global browser */
 
-/**
- * @typedef {object} DimState
- * @property {boolean} isDimmed
- * @property {number} opacity A number [0, 1]
- */
 
 /**
- * Dim states of tabs.
- * Keys are tab ids and values are dim states.
- * @type {Map<number, DimState>}
+ * This state represents the state of all tabs that haven't selected 'Only this tab' option.
  */
-const states = new Map();
+const globalState = {
+  isDimmed: false,
+  opacity: 0.7,
+};
+
 
 function getState(tabId) {
-  return states.get(tabId) || { isDimmed: false, opacity: 0.7 };
+
+  return globalState;
 }
 
-function extendState(tabId, params) {
-  const state = getState(tabId);
-  states.set(tabId, {
-    ...state,
-    ...params,
-  });
-}
 
-async function toggleDim(tab) {
-  console.debug('toggle dim', tab.id);
+async function setState(tabId, stateProp, propValue) {
 
-  const state = getState(tab.id);
-  state.isDimmed = !state.isDimmed;
-  states.set(tab.id, state);
 
-  await browser.tabs.sendMessage(tab.id, {
-    command: state.isDimmed ? 'dim' : 'undim',
+
+  if (stateProp !== null) {
+    globalState[stateProp] = propValue;
+  }
+
+  const allTabs = await browser.tabs.query({});
+  const promises = [];
+  const command = {
+    command: 'set-state',
     from: 'background',
     to: 'content_script',
-  });
-}
+    data: {
+      isDimmed: globalState.isDimmed,
+      opacity: globalState.opacity,
+    },
+  };
 
-async function dim(tabId) {
-  console.debug('Dimming tab', tabId);
-  extendState(tabId, { isDimmed: true });
-  await browser.tabs.sendMessage(tabId, { command: 'dim', from: 'background', to: 'content_script' });
-}
+  for (const tab of allTabs) {
+    const promise = browser.tabs.sendMessage(tab.id, command);
+    promises.push(promise);
+  }
 
-async function unDim(tabId) {
-  console.debug('Undimming tab', tabId);
-  extendState(tabId, { isDimmed: false });
-  await browser.tabs.sendMessage(tabId, { command: 'undim', from: 'background', to: 'content_script' });
-}
-
-async function setOpacity(tabId, opacity) {
-  console.debug('Setting opacity of tab', tabId);
-  extendState(tabId, { opacity });
-  await browser.tabs.sendMessage(tabId, {
-    command: 'set-opacity',
-    from: 'background',
-    to: 'content_script',
-    data: opacity,
-  });
+  await Promise.all(promises);
 }
 
 async function getActiveTab() {
@@ -95,12 +77,14 @@ async function handleCommand(commandName) {
   switch (commandName) {
     case 'toggle-dim': {
       const activeTab = await getActiveTab();
-      return toggleDim(activeTab);
+      const state = getState(activeTab.id);
+      return setState(activeTab.id, 'isDimmed', !state.isDimmed);
     }
 
-    default:
+    default: {
       return Promise.resolve();
   }
+}
 }
 
 async function handleMessage(message, sender) {
@@ -116,27 +100,24 @@ async function handleMessage(message, sender) {
     }
 
     case 'dim': {
-      return dim(activeTab.id);
+      return setState(activeTab.id, 'isDimmed', true);
     }
 
     case 'undim': {
-      return unDim(activeTab.id);
+      return setState(activeTab.id, 'isDimmed', false);
     }
 
     case 'set-opacity': {
-      return setOpacity(activeTab.id, message.data.opacity);
+      console.debug('setting opacity', message.data.opacity);
+      return setState(activeTab.id, 'opacity', message.data.opacity);
     }
 
-    default:
+    default: {
       return Promise.resolve();
+    }
   }
 }
 
-function handleTabRemove(tabId) {
-  console.debug(`Removing dimmer state info of tab ${tabId}`);
-  states.delete(tabId);
-}
 
 browser.commands.onCommand.addListener(handleCommand);
 browser.runtime.onMessage.addListener(handleMessage);
-browser.tabs.onRemoved.addListener(handleTabRemove);
