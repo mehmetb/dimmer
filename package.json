@@ -4,7 +4,7 @@
   "description": "A browser extension to dim web pages",
   "main": "index.js",
   "scripts": {
-    "build": "web-ext build --overwrite-dest -i package.json README.md yarn.lock dark-mode demo.gif _config.yml",
+    "build": "web-ext build --overwrite-dest -i package.json README.md yarn.lock \"**-profile\" demo.gif _config.yml",
     "dev": "env-cmd -x --use-shell web-ext run -u https://wikipedia.com --verbose --firefox-profile=\"\\$LIGHT_MODE_PROFILE\"",
     "dev-dark": "env-cmd -x web-ext run --verbose -u https://wikipedia.com --firefox-profile=\"\\$DARK_MODE_PROFILE\"",
     "lint": "eslint content_scripts/*.js popup/*.js background.js",
@@ -19,7 +19,7 @@
     "dark",
     "overlay"
   ],
-  "author": "Mehmet Baker <mehmet@mehmetbaker.dev> (https://mehmetbaker.dev)",
+  "author": "Mehmet Baker <mehmetb_dev@pm.me> (https://mehmetb.github.io)",
   "license": "GPL-3.0-or-later",
   "bugs": {
     "url": "https://github.com/mehmetb/dimmer/issues"
