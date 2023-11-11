@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2021 Mehmet Baker
+ * Copyright 2020-2023 Mehmet Baker
  *
  * This file is part of dimmer.
  *
@@ -76,8 +76,9 @@
 
     switch (message.command) {
       case 'set-state': {
+        state.opacity = message.data.opacity;
+
         if (state.isDimmed) {
-          state.opacity = message.data.opacity;
           state.container.style.opacity = state.opacity;
         }
 
@@ -103,8 +104,8 @@
         to: 'background',
       });
 
-      state.isDimmed = !!response.isDimmed;
-      state.opacity = String(response.opacity) || '0';
+      state.isDimmed = !!response.state.isDimmed;
+      state.opacity = String(response.state.opacity) || '0';
       state.container.style.opacity = state.isDimmed ? state.opacity : '0';
 
       setTimeout(() => {

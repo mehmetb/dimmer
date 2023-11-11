@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "build": "web-ext build --overwrite-dest -i package.json README.md yarn.lock dark-mode demo.gif _config.yml",
-    "dev": "web-ext run --verbose -u https://mehmetbaker.dev",
-    "dev-dark": "web-ext run --verbose -u https://mehmetbaker.dev -p dark-mode/",
+    "dev": "env-cmd -x --use-shell web-ext run -u https://wikipedia.com --verbose --firefox-profile=\"\\$LIGHT_MODE_PROFILE\"",
+    "dev-dark": "env-cmd -x web-ext run --verbose -u https://wikipedia.com --firefox-profile=\"\\$DARK_MODE_PROFILE\"",
     "lint": "eslint content_scripts/*.js popup/*.js background.js",
     "lint-fix": "eslint --fix content_scripts/*.js popup/*.js background.js",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -26,9 +26,10 @@
   },
   "homepage": "https://github.com/mehmetb/dimmer#readme",
   "devDependencies": {
-    "eslint": "^7.25.0",
-    "eslint-config-airbnb-base": "*",
-    "eslint-plugin-import": "*",
-    "web-ext": "^6.1.0"
+    "env-cmd": "^10.1.0",
+    "eslint": "latest",
+    "eslint-config-airbnb-base": "latest",
+    "eslint-plugin-import": "latest",
+    "web-ext": "latest"
   }
 }
