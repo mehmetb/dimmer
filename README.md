@@ -7,9 +7,9 @@ A browser extension to dim web pages. [Add it to Firefox](https://addons.mozilla
 ### Shortcuts
 
 - Toggle Dim (All tabs)
-Default: <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>N</kbd> (Windows), <kbd>⌘</kbd> + <kbd>⌥</kbd> + <kbd>N</kbd> (Mac)
+Default: <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>N</kbd> (Linux/Windows), <kbd>⌘</kbd> + <kbd>⌥</kbd> + <kbd>N</kbd> (Mac)
 - Toggle Dim (Active tab only)
-Default: <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>B</kbd> (Windows), <kbd>⌘</kbd> + <kbd>⌥</kbd> + <kbd>B</kbd> (Mac)
+Default: <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>B</kbd> (Linux/Windows), <kbd>⌘</kbd> + <kbd>⌥</kbd> + <kbd>B</kbd> (Mac)
 
 *Note:* You can change the shortcuts from `about:addons` -> Manage Your Extension -> Manage Extension Shortcuts.
 
