@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2021 Mehmet Baker
+ * Copyright 2020-2023 Mehmet Baker
  *
  * This file is part of dimmer.
  *
@@ -23,70 +23,79 @@
  * @typedef {object} TabState
  * @property {boolean} isDimmed
  * @property {number} opacity A number [0, 1]
- * @property {boolean} [overrideGlobalState] If true, popup option 'Only for this tab' will be checked.
+ * @property {boolean} [applySettingsToCurrentTab] If true, popup option 'Apply settings to this tab only' will be checked.
  */
 
-/**
- * This state represents the state of all tabs that haven't selected 'Only this tab' option.
- */
-const globalState = {
+const defaultSettings = {
+  applyToAllTabs: true,
+};
+
+const initialState = {
   isDimmed: false,
   opacity: 0.7,
 };
 
 /**
- * These states represent the states of tabs that checked the 'Only this tab' option.
- * Keys are tab ids and values are dim states.
- * @type {Map<number, TabState>}
+ * This state is the state of tabs that checked 'Apply settings to all tabs' option.
  */
-const overriddenStates = new Map();
+const globalState = {
+  ...initialState,
+};
 
 /**
- * Returns a tab state. If the option 'Only for this tab' is selected for the tab,
- * then the overridden state will be returned. Otherwise the global state will be
- * returned.
+ * These states are of tabs that checked the 'Apply settings to this tab only' option.
+ * Keys are tab ids and values are states.
+ * @type {Map<number, TabState>}
+ */
+const localStateTabs = new Map();
+
+const globalStateTabs = new Set();
+
+/**
+ * Returns a tab's state.
  * @param {number} tabId Tab ID
  * @returns {TabState}
  */
 function getState(tabId) {
-  if (overriddenStates.has(tabId)) {
+  if (localStateTabs.has(tabId)) {
     return {
-      ...overriddenStates.get(tabId),
-      overrideGlobalState: true,
+      ...localStateTabs.get(tabId),
+      applySettingsToCurrentTab: true,
     };
   }
+
   return globalState;
 }
 
 /**
  * Adds/updates the overridden states
  * @param {number} tabId Tab ID.
- * @param {*} params Prop(s) of TabState
+ * @param {{ isDimmed?: boolean, opacity?: number }} params Prop(s) of TabState
  */
 function extendState(tabId, params = {}) {
   const state = getState(tabId);
-  overriddenStates.set(tabId, {
+  localStateTabs.set(tabId, {
     ...state,
     ...params,
   });
 }
 
 /**
- * Updates the state object in background script. Also updates the states of content
+ * Updates the state object in the background script. Also updates the states of content
  * scripts by sending them set-state commands.
  * @param {number} tabId Tab ID
- * @param {string|null} stateProp A property key of TabState
+ * @param {('isDimmed'|'opacity')|null} stateProp A property key of TabState
  * @param {boolean|number} [propValue] A prop value of TabState
  * @returns {Promise<void>}
  */
 async function setState(tabId, stateProp, propValue) {
-  // If 'Only for this tab' option is selected, update the current tab only
-  if (overriddenStates.has(tabId)) {
+  // If 'Apply settings to this tab only' option is selected, update the current tab only
+  if (localStateTabs.has(tabId)) {
     const state = getState(tabId);
 
     if (stateProp !== null) {
       state[stateProp] = propValue;
-      overriddenStates.set(tabId, state);
+      localStateTabs.set(tabId, state);
     }
 
     await browser.tabs.sendMessage(tabId, {
@@ -98,11 +107,12 @@ async function setState(tabId, stateProp, propValue) {
         opacity: state.opacity,
       },
     });
+
     return;
   }
 
-  // If 'Only for this tab' is NOT selected, then update all tabs but the overriddens.
-
+  // If 'Apply settings to all tabs' option is checked then update all the other tabs
+  // that checked 'Apply settings to all tabs' option as well.
   if (stateProp !== null) {
     globalState[stateProp] = propValue;
   }
@@ -120,7 +130,7 @@ async function setState(tabId, stateProp, propValue) {
   };
 
   for (const tab of allTabs) {
-    const isOverridden = overriddenStates.has(tab.id);
+    const isOverridden = localStateTabs.has(tab.id);
     if (!isOverridden) {
       const promise = browser.tabs.sendMessage(tab.id, command);
       promises.push(promise);
@@ -180,7 +190,18 @@ async function handleMessage(message, sender) {
 
   switch (message.command) {
     case 'query': {
-      return getState(activeTab.id);
+      if (!localStateTabs.has(activeTab.id) && !globalStateTabs.has(activeTab.id)) {
+        if (defaultSettings.applyToAllTabs) {
+          globalStateTabs.add(activeTab.id);
+        } else {
+          localStateTabs.set(activeTab.id, { ...initialState });
+        }
+      }
+
+      return {
+        state: getState(activeTab.id),
+        defaultSettings,
+      };
     }
 
     case 'dim': {
@@ -196,14 +217,34 @@ async function handleMessage(message, sender) {
       return setState(activeTab.id, 'opacity', message.data.opacity);
     }
 
-    case 'override-global-state': {
+    case 'apply-settings-to-current-tab-only': {
+      globalStateTabs.delete(activeTab.id);
       extendState(activeTab.id);
       return Promise.resolve();
     }
 
-    case 'remove-state-override': {
-      overriddenStates.delete(activeTab.id);
+    case 'apply-settings-to-all-tabs': {
+      // get the current state of the tab
+      const tabState = localStateTabs.get(activeTab.id);
+
+      if (tabState) {
+        // update global state settings to match the current tab's state
+        globalState.isDimmed = tabState.isDimmed;
+        globalState.opacity = tabState.opacity;
+      }
+
+      // remove the current tab from the ovveriden map so it can get global state changes in the future
+      localStateTabs.delete(activeTab.id);
+      globalStateTabs.add(activeTab.id);
+
+      // calling `setState` with `null` will cause all tabs that don't choose 'Apply settings to this tab only' to get
+      // the latest gloabl state
       return setState(activeTab.id, null);
+    }
+
+    case 'update-default-settings': {
+      defaultSettings.applyToAllTabs = message.data.applyToAllTabs;
+      return Promise.resolve({ defaultSettings, message });
     }
 
     default: {
@@ -213,7 +254,8 @@ async function handleMessage(message, sender) {
 }
 
 function handleTabRemove(tabId) {
-  overriddenStates.delete(tabId);
+  localStateTabs.delete(tabId);
+  globalStateTabs.delete(tabId);
 }
 
 browser.commands.onCommand.addListener(handleCommand);

@@ -90,3 +90,54 @@ button.default:hover {
 button.default:hover:active {
   background-color: rgba(0, 0, 0, 0.1);
 }
+
+.panel-formElements-item.checkbox-panel, .panel-formElements-item.checkbox-panel label {
+  display: block;
+}
+
+.panel-formElements-item.checkbox-panel input {
+  margin-top: 10px;
+}
+
+div.settings {
+  background-color: #676774ab;
+  mask: url(./settings-24.svg) no-repeat center;
+  width: 24px;
+  height: 24px;
+  padding-bottom: 0;
+  margin-bottom: 0;
+  position: absolute;
+  top: 5px;
+  right: 5px;
+}
+
+div.settings:hover {
+  cursor: pointer;
+  background-color: #676774;
+}
+
+div.back {
+  color: #676774ab;
+  position: absolute;
+  top: 5px;
+  left: 14px;
+  display: flex;
+  align-items: center;
+}
+
+div.back-icon {
+  display: inline-block;
+  background-color: #676774ab;
+  mask: url(./back-24.svg) no-repeat center;
+  width: 24px;
+  height: 24px;
+}
+
+div.back:hover {
+  cursor: pointer;
+  color: #676774;
+}
+
+div.back:hover div.back-icon {
+  background-color: #676774;
+}
