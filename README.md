@@ -4,7 +4,14 @@ A browser extension to dim web pages. [Add it to Firefox](https://addons.mozilla
 
 ![Dimmer Demo](demo.gif)
 
-*Note:* Default shortcut is: <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>N</kbd>. You can change it from `about:addons` -> Manage Your Extension -> Manage Extension Shortcuts.
+### Shortcuts
+
+- Toggle Dim (All tabs)
+Default: <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>N</kbd> (Linux/Windows), <kbd>⌘</kbd> + <kbd>⌥</kbd> + <kbd>N</kbd> (Mac)
+- Toggle Dim (Active tab only)
+Default: <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>B</kbd> (Linux/Windows), <kbd>⌘</kbd> + <kbd>⌥</kbd> + <kbd>B</kbd> (Mac)
+
+*Note:* You can change the shortcuts from `about:addons` -> Manage Your Extension -> Manage Extension Shortcuts.
 
 ### Settings
 

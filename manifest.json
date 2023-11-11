@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "dimmer",
-  "version": "3.1.0",
+  "version": "3.2.0",
   "description": "A browser extension to dim web pages.",
 
   "author": "Mehmet Baker",
@@ -35,9 +35,14 @@
   },
 
   "commands": {
-    "toggle-dim": {
+    "Toggle Dim (All tabs)": {
       "suggested_key": {
         "default": "Ctrl+Alt+N"
+      }
+    },
+    "Toggle Dim (Active tab only)": {
+      "suggested_key": {
+        "default": "Ctrl+Alt+B"
       }
     }
   },

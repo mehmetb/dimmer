@@ -1,10 +1,10 @@
 {
   "name": "dimmer",
-  "version": "3.1.0",
+  "version": "3.2.0",
   "description": "A browser extension to dim web pages",
   "main": "index.js",
   "scripts": {
-    "build": "web-ext build --overwrite-dest -i package.json README.md yarn.lock \"**-profile\" demo.gif _config.yml",
+    "build": "web-ext build --overwrite-dest -i \"*.code-workspace\" package.json README.md yarn.lock \"**-profile\" demo.gif _config.yml",
     "dev": "env-cmd -x --use-shell web-ext run -u https://wikipedia.com --verbose --firefox-profile=\"\\$LIGHT_MODE_PROFILE\"",
     "dev-dark": "env-cmd -x web-ext run --verbose -u https://wikipedia.com --firefox-profile=\"\\$DARK_MODE_PROFILE\"",
     "lint": "eslint content_scripts/*.js popup/*.js background.js",
