@@ -4,3 +4,4 @@ icons/
 web-ext-artifacts/
 .env
 .DS_Store
+*.code-workspace
