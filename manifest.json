@@ -35,9 +35,14 @@
   },
 
   "commands": {
-    "toggle-dim": {
+    "Toggle Dim (All tabs)": {
       "suggested_key": {
         "default": "Ctrl+Alt+N"
+      }
+    },
+    "Toggle Dim (Active tab only)": {
+      "suggested_key": {
+        "default": "Ctrl+Alt+B"
       }
     }
   },

@@ -162,9 +162,21 @@ async function getActiveTab() {
  */
 async function handleCommand(commandName) {
   switch (commandName) {
-    case 'toggle-dim': {
+    case 'Toggle Dim (All tabs)': {
       const activeTab = await getActiveTab();
       const state = getState(activeTab.id);
+      return setState(activeTab.id, 'isDimmed', !state.isDimmed);
+    }
+
+    case 'Toggle Dim (Active tab only)': {
+      const activeTab = await getActiveTab();
+      const state = getState(activeTab.id);
+
+      if (!localStateTabs.has(activeTab.id)) {
+        globalStateTabs.delete(activeTab.id);
+        localStateTabs.set(activeTab.id, { ...globalState });
+      }
+
       return setState(activeTab.id, 'isDimmed', !state.isDimmed);
     }
 
