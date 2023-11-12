@@ -1,5 +1,5 @@
 {
-  "manifest_version": 2,
+  "manifest_version": 3,
   "name": "dimmer",
   "version": "3.2.0",
   "description": "A browser extension to dim web pages.",
@@ -16,10 +16,10 @@
     "scripts": ["background.js"]
   },
 
-  "browser_action": {
-    "browser_style": true,
-    "default_title": "Dim page",
-    "default_popup": "/popup/popup.html",
+  "action": {
+    "default_title": "Dimmer",
+    "default_popup": "views/popup/popup.html",
+    "default_area": "navbar",
     "theme_icons": [
       {
         "light": "icons/browser-action-light.svg",

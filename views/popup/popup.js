@@ -19,23 +19,12 @@
 
 /* global browser */
 
-/** @type {HTMLDivElement} */
-const page1 = document.querySelector('div.page-1');
-
-/** @type {HTMLDivElement} */
-const page2 = document.querySelector('div.page-2');
-
 const undimButton = document.querySelector('button.default');
 const dimButton = document.querySelector('button.primary');
 const rangeInput = document.querySelector('input[type=range]');
 
 const radioButtonForAllTabs = document.querySelector('#radioAllTabs');
 const radioButtonForCurrentTab = document.querySelector('#radioCurrentTab');
-const radioDefaultAllTabs = document.querySelector('#radioDefaultAllTabs');
-const radioDefaultCurrentTab = document.querySelector('#radioDefaultCurrentTab');
-
-const settingsButton = document.querySelector('div.settings');
-const backButton = document.querySelector('div.back');
 
 async function sendCommandToActiveTab(command, data) {
   return browser.runtime.sendMessage({
@@ -48,7 +37,7 @@ async function sendCommandToActiveTab(command, data) {
 
 async function loadState() {
   try {
-    const { state: { opacity, applySettingsToCurrentTab = false }, defaultSettings } = await sendCommandToActiveTab('query');
+    const { state: { opacity, applySettingsToCurrentTab = false }} = await sendCommandToActiveTab('query');
     rangeInput.value = opacity;
 
     if (applySettingsToCurrentTab) {
@@ -57,14 +46,6 @@ async function loadState() {
     } else {
       radioButtonForCurrentTab.checked = false;
       radioButtonForAllTabs.checked = true;
-    }
-
-    if (defaultSettings.applyToAllTabs) {
-      radioDefaultAllTabs.checked = true;
-      radioDefaultCurrentTab.checked = false;
-    } else {
-      radioDefaultAllTabs.checked = false;
-      radioDefaultCurrentTab.checked = true;
     }
   } catch (ex) {
     console.error(ex.message);
@@ -105,29 +86,6 @@ radioButtonForAllTabs.addEventListener('change', () => {
 
 radioButtonForCurrentTab.addEventListener('change', () => {
   updateSettingsScope({ applyToAllTabs: false });
-});
-
-radioDefaultCurrentTab.addEventListener('change', () => {
-  sendCommandToActiveTab('update-default-settings', {
-    applyToAllTabs: !!radioDefaultAllTabs.checked,
-  }).catch(console.trace);
-});
-
-radioDefaultAllTabs.addEventListener('change', () => {
-  console.info('def all changed', radioDefaultAllTabs.checked);
-  sendCommandToActiveTab('update-default-settings', {
-    applyToAllTabs: !!radioDefaultAllTabs.checked,
-  }).catch(console.trace);
-});
-
-settingsButton.addEventListener('click', () => {
-  page1.style.display = 'none';
-  page2.style.display = 'block';
-});
-
-backButton.addEventListener('click', () => {
-  page1.style.display = 'block';
-  page2.style.display = 'none';
 });
 
 loadState();
