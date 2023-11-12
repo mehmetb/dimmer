@@ -16,6 +16,18 @@
     "scripts": ["background.js"]
   },
 
+  "permissions": [
+    "activeTab",
+    "storage"
+  ],
+
+  "optional_permissions": [
+    "<all_urls>",
+    "tabs",
+    "webRequest",
+    "webRequestBlocking"
+  ],
+
   "action": {
     "default_title": "Dimmer",
     "default_popup": "views/popup/popup.html",
@@ -35,24 +47,23 @@
   },
 
   "commands": {
-    "Toggle Dim (All tabs)": {
+    "toggle-all": {
+      "description": "__MSG_toggleAll__",
       "suggested_key": {
         "default": "Ctrl+Alt+N"
       }
     },
-    "Toggle Dim (Active tab only)": {
+    "toggle-active-only": {
+      "description": "__MSG_toggleActiveOnly__",
       "suggested_key": {
         "default": "Ctrl+Alt+B"
       }
     }
   },
 
-  "content_scripts": [
-    {
-      "js": ["content_scripts/overlay.js"],
-      "matches": ["<all_urls>"],
-      "match_about_blank": true,
-      "run_at": "document_start"
-    }
-  ]
+  "options_ui": {
+    "page": "views/options/options.html"
+  },
+
+  "default_locale": "en"
 }
