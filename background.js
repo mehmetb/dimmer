@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2023 Mehmet Baker
+ * Copyright 2020, 2021, 2023 Mehmet Baker
  *
  * This file is part of dimmer.
  *
@@ -273,6 +273,7 @@ function handleTabRemove(tabId) {
 browser.commands.onCommand.addListener(handleCommand);
 browser.runtime.onMessage.addListener(handleMessage);
 browser.tabs.onRemoved.addListener(handleTabRemove);
+browser.permissions.getAll().then(console.log).catch(console.trace);
 
 /**
  * @typedef {object} IncomingMessage

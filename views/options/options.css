@@ -1,9 +1,66 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+/**
+ * Copyright 2023 Mehmet Baker
+ *
+ * This file is part of dimmer.
+ *
+ * dimmer is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * dimmer is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with dimmer. If not, see <https://www.gnu.org/licenses/>.
+ * 
+ * This file incorporates work covered by the following copyright and  
+ * permission notice:
+ *
+ *    This Source Code Form is subject to the terms of the Mozilla Public
+ *    License, v. 2.0. If a copy of the MPL was not distributed with this
+ *    file, You can obtain one at http://mozilla.org/MPL/2.0/. 
+ */
 
+/**
+@mehmetb: My goal was to make the options page look like a native Firefox page. I got the color codes, design details etc. 
+from the files listed below. Copying everything was not going to work in my case so I had to summarize the same behavior
+in a few selectors. If you are not comfortable with a GPL license you can achieve the same result with the links below.
+
+Links to the incorporated work:
+
+moz-toggle.css:          https://github.com/mozilla/gecko-dev/blob/fe8b30e982c86d26ccf1f14d825c0de870b91f27/toolkit/content/widgets/moz-toggle/moz-toggle.css
+tokens-brand.css:        https://github.com/mozilla/gecko-dev/blob/fe8b30e982c86d26ccf1f14d825c0de870b91f27/toolkit/themes/shared/design-system/tokens-brand.css
+tokens-shared.css:       https://github.com/mozilla/gecko-dev/blob/fe8b30e982c86d26ccf1f14d825c0de870b91f27/toolkit/themes/shared/design-system/tokens-shared.css
+text-and-typography.css: https://github.com/mozilla/gecko-dev/blob/fe8b30e982c86d26ccf1f14d825c0de870b91f27/toolkit/themes/shared/design-system/text-and-typography.css
+aboutaddons.css:         https://github.com/mozilla/gecko-dev/blob/fe8b30e982c86d26ccf1f14d825c0de870b91f27/toolkit/mozapps/extensions/content/aboutaddons.css
+common-shared.css:       https://github.com/mozilla/gecko-dev/blob/fe8b30e982c86d26ccf1f14d825c0de870b91f27/toolkit/themes/shared/in-content/common-shared.css
+*/
+
+:root {
+  --background-color: #fff;
+  --section-border-color: #d7d7db;
+  --section-header-color: rgb(21, 20, 26);
+  --section-description-color: color(srgb 0.0823529 0.0784314 0.101961 / 0.476);
+  --radio-background-color: color(srgb 0.0823529 0.0784314 0.101961 / 0.07);
+  --radio-background-color-hover: color(srgb 0.0823529 0.0784314 0.101961 / 0.14);
+  --radio-background-color-active: color(srgb 0.0823529 0.0784314 0.101961 / 0.21);
+  --radio-border-color: color-mix(in srgb, currentColor 41%, transparent);
+  --radio-checked-color: #0061e0;
+  --radio-background-image: url(radio.svg);
+  --text-color-deemphasized: color(srgb 0.0823529 0.0784314 0.101961 / 0.69);
+  --toggle-background-color-pressed: #0060df;
+  --toggle-background-color-pressed-active: #054096;
+  --toggle-background-color-pressed-hover: #0250bb;
+  --toggle-border-color: #8f8f9d;
+  --toggle-dot-background-color-pressed: #ffffff;
+}
+ 
 body {
   overflow: hidden;
+  background-color: var(--background-color);
 }
 
 .settings-group {
@@ -20,7 +77,7 @@ body {
   font-synthesis-style: auto;
   font-synthesis-weight: auto;
   font-weight: 400;
-  border-top: 1px solid #d7d7db;
+  border-top: 1px solid var(--section-border-color);
   padding: 16px;
   margin: 0 -16px;
 }
@@ -45,6 +102,7 @@ body {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
+  color: var(--section-header-color);
 }
 
 .radios input {
@@ -52,35 +110,35 @@ body {
   width: 16px;
   height: 16px;
   padding: 0;
-  border: 1px solid color(srgb 0.0823529 0.0784314 0.101961 / 0.41);
+  border: 1px solid var(--radio-border-color);
   border-radius: 100%;
   margin-block: 2px;
   margin-inline: 0 6px;
-  background-color: color(srgb 0.0823529 0.0784314 0.101961 / 0.07);
+  background-color: var(--radio-background-color);
   background-position: center;
   flex-shrink: 0;
 }
 
-.radios input:hover, button.toggle-button:hover {
-  background-color: color(srgb 0.0823529 0.0784314 0.101961 / 0.14);
+.radios input:hover {
+  background-color: var(--radio-background-color-hover);
 }
 
-.radios input:hover:active, button.toggle-button:hover:active {
-  background-color: color(srgb 0.0823529 0.0784314 0.101961 / 0.21);
+.radios input:hover:active {
+  background-color: var(--radio-background-color-active);
 }
 
 .radios input:checked {
-  background-color: #0061e0;
-  background-image: url("radio.svg");
+  background-color: var(--radio-checked-color);
+  background-image: var(--radio-background-image);
   border-color: transparent;
 }
 
 .setting-name-and-radios > span {
-  color: rgb(21, 20, 26);
+  color: var(--section-header-color);
 }
 
 .settings-help > p {
-  color: color(srgb 0.0823529 0.0784314 0.101961 / 0.476);
+  color: var(--section-description-color);
 }
 
 .settings-row {
@@ -109,38 +167,47 @@ button.toggle-button {
   appearance: none;
   padding: 0;
   margin: 0;
-  border: 1px solid #8f8f9d;
+  border: 1px solid var(--toggle-border-color);
   height: 16px;
   width: 32px;
   border-radius: 9999px;
   background: color-mix(in srgb, currentColor 7%, transparent);
   box-sizing: border-box;
   grid-row: 1;
-  color: #000;
+  color: var(--text-color-deemphasized);
   cursor: default;
 }
 
+button.toggle-button:hover {
+  background: color-mix(in srgb, currentColor 14%, transparent);
+}
+
+button.toggle-button:hover:active {
+  background: color-mix(in srgb, currentColor 21%, transparent);
+}
+
 button.toggle-button[aria-pressed=true]::before {
-  background-color: #ffffff;
+  background-color: var(--toggle-dot-background-color-pressed);
   translate: 16px;
 }
 
 button.toggle-button[aria-pressed=true] {
-  background-color: #0060df;
+  background-color: var(--toggle-background-color-pressed);
+  border-color: transparent;
 }
 
 button.toggle-button[aria-pressed=true]:hover {
-  background-color: #0250bb;
+  background-color: var(--toggle-background-color-pressed-hover);
 }
 
 button.toggle-button[aria-pressed=true]:hover:active {
-  background-color: #054096;
+  background-color: var(--toggle-background-color-pressed-active);
 }
 
 h3 {
   font-size: 1em;
   line-height: 1.3;
-  color: color(srgb 0.0823529 0.0784314 0.101961 / 0.69);
+  color: var(--text-color-deemphasized);
 }
 
 ul {
@@ -157,6 +224,7 @@ ul li {
   background-position: 0 center;
   background-size: 1.6rem 1.6rem;
   background-repeat: no-repeat;
+  color: var(--text-color-deemphasized);
 }
 
 ul li.checked {
@@ -166,5 +234,26 @@ ul li.checked {
 @media (prefers-reduced-motion: no-preference) {
   button.toggle-button::before {
     transition: translate 100ms;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background-color: rgb(35, 34, 43);
+    --section-border-color: rgba(249, 249, 250, 0.2);
+    --section-header-color: rgb(251, 251, 254);
+    --section-description-color: color(srgb 0.984314 0.984314 0.996078 / 0.563);
+    --radio-background-color: color-mix(in srgb, currentColor 7%, transparent);
+    --radio-background-color-hover: color-mix(in srgb, currentColor 14%, transparent);
+    --radio-background-color-active: color-mix(in srgb, currentColor 21%, transparent);
+    --radio-border-color: color-mix(in srgb, currentColor 41%, transparent);
+    --radio-checked-color: rgb(0, 221, 255);
+    --radio-background-image: url(radio-dark.svg);
+    --text-color-deemphasized: color(srgb 0.984314 0.984314 0.996078 / 0.75);
+    --toggle-border-color: #bfbfc9;
+    --toggle-background-color-pressed: #00ddff;
+    --toggle-background-color-pressed-active: #aaf2ff;
+    --toggle-background-color-pressed-hover: #80ebff;
+    --toggle-dot-background-color-pressed: #1c1b22;
   }
 }
