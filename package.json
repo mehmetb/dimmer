@@ -32,5 +32,6 @@
     "eslint-config-airbnb-base": "latest",
     "eslint-plugin-import": "latest",
     "web-ext": "latest"
-  }
+  },
+  "packageManager": "yarn@4.5.0"
 }
