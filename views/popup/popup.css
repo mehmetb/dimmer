@@ -111,6 +111,7 @@ button.default:hover:active {
 
 .panel-formElements-item.checkbox-panel, .panel-formElements-item.checkbox-panel label {
   display: block;
+  text-align: left;
 }
 
 .panel-formElements-item.checkbox-panel input {
