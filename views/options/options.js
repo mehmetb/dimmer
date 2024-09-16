@@ -38,6 +38,16 @@ function checkUncheckRadios(radioName, check = false) {
   document.querySelector(selector).checked = true;
 }
 
+function getSettingsAndUpdateFormData() {
+  browser.storage.local.get('dimAllTabs')
+    .then((result) => {
+      const { dimAllTabs } = result;
+      const dimAllTabsButton = document.querySelector('button#dim-all-tabs');
+      dimAllTabsButton.setAttribute('aria-pressed', dimAllTabs);
+      dimAllTabsButton.closest('li').classList.toggle('checked', dimAllTabs);
+    });
+}
+
 function getAllPermissionsAndUpdateFormData() {
   browser.permissions.getAll()
     .then((permissions) => {
@@ -76,15 +86,18 @@ for (const [radioName, permission] of Object.entries(radioNameToPermissionMap)) 
   });
 }
 
-document.querySelectorAll('button.toggle-button').forEach((button) => {
-  button.addEventListener('click', (e) => {
-    const pressed = e.target.getAttribute('aria-pressed');
-    e.target.setAttribute('aria-pressed', pressed === 'true' ? 'false' : 'true');
-    e.target.closest('li').classList.toggle('checked');
-  });
+document.querySelector('button#dim-all-tabs').addEventListener('click', (e) => {
+  const pressed = e.target.getAttribute('aria-pressed');
+  e.target.setAttribute('aria-pressed', pressed === 'true' ? 'false' : 'true');
+  e.target.closest('li').classList.toggle('checked');
+
+  const checked = e.target.closest('li').classList.contains('checked');
+  browser.storage.local.set({ dimAllTabs: checked });
 });
 
 getAllPermissionsAndUpdateFormData();
+getSettingsAndUpdateFormData();
 
 browser.permissions.onAdded.addListener(getAllPermissionsAndUpdateFormData);
 browser.permissions.onRemoved.addListener(getAllPermissionsAndUpdateFormData);
+browser.storage.onChanged.addListener(getSettingsAndUpdateFormData);
