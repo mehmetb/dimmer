@@ -17,6 +17,65 @@
  * along with dimmer. If not, see <https://www.gnu.org/licenses/>.
  */
 
+/* global browser */
+
+const radioNameToPermissionMap = {
+  'host-permissions': { origins: ['<all_urls>'] },
+  'tabs-permission': { permissions: ['tabs'] },
+  'webrequest-permissions': { permissions: ['webRequest'] },
+};
+
+function requestPermission(permissionToRequest) {
+  return browser.permissions.request(permissionToRequest);
+}
+
+function removePermission(permissionToRemove) {
+  return browser.permissions.remove(permissionToRemove);
+}
+
+function checkUncheckRadios(radioName, check = false) {
+  const selector = `input[name="${radioName}"][value="${check ? 1 : 0}"]`;
+  document.querySelector(selector).checked = true;
+}
+
+function getAllPermissionsAndUpdateFormData() {
+  browser.permissions.getAll()
+    .then((permissions) => {
+      const hostPermission = permissions.origins.includes('<all_urls>');
+      const tabsPermission = permissions.permissions.includes('tabs');
+      const webRequestPermission = permissions.permissions.includes('webRequest');
+
+      checkUncheckRadios('host-permissions', hostPermission);
+      checkUncheckRadios('tabs-permission', tabsPermission);
+      checkUncheckRadios('webrequest-permissions', webRequestPermission);
+    })
+    .catch((error) => {
+      console.trace(error);
+    });
+}
+
+for (const [radioName, permission] of Object.entries(radioNameToPermissionMap)) {
+  document.querySelectorAll(`input[name="${radioName}"]`).forEach((radio) => {
+    radio.addEventListener('change', async (e) => {
+      const permissionToRequest = permission;
+      const permissionGranted = e.target.value === '1';
+      console.info(`${permissionGranted ? 'Requesting' : 'Removing'} permission`, permissionToRequest);
+
+      if (permissionGranted) {
+        requestPermission(permissionToRequest)
+          .then((isAdded) => {
+            checkUncheckRadios(radioName, isAdded);
+          });
+      } else {
+        removePermission(permissionToRequest)
+          .then((isRemoved) => {
+            checkUncheckRadios(radioName, !isRemoved);
+          });
+      }
+    });
+  });
+}
+
 document.querySelectorAll('button.toggle-button').forEach((button) => {
   button.addEventListener('click', (e) => {
     const pressed = e.target.getAttribute('aria-pressed');
@@ -24,3 +83,8 @@ document.querySelectorAll('button.toggle-button').forEach((button) => {
     e.target.closest('li').classList.toggle('checked');
   });
 });
+
+getAllPermissionsAndUpdateFormData();
+
+browser.permissions.onAdded.addListener(getAllPermissionsAndUpdateFormData);
+browser.permissions.onRemoved.addListener(getAllPermissionsAndUpdateFormData);
