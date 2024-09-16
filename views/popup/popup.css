@@ -1,5 +1,5 @@
 /**
- * Copyright 2020, 2021, 2023 Mehmet Baker
+ * Copyright 2020, 2021, 2023, 2024 Mehmet Baker
  *
  * This file is part of dimmer.
  *
