@@ -38,13 +38,17 @@ function checkUncheckRadios(radioName, check = false) {
   document.querySelector(selector).checked = true;
 }
 
+function toggleDimAllTabsButton(check = false) {
+  const dimAllTabsButton = document.querySelector('button#dim-all-tabs');
+  dimAllTabsButton.setAttribute('aria-pressed', `${!!check}`);
+  dimAllTabsButton.closest('li').classList.toggle('checked', check);
+}
+
 function getSettingsAndUpdateFormData() {
   browser.storage.local.get('dimAllTabs')
     .then((result) => {
       const { dimAllTabs } = result;
-      const dimAllTabsButton = document.querySelector('button#dim-all-tabs');
-      dimAllTabsButton.setAttribute('aria-pressed', dimAllTabs);
-      dimAllTabsButton.closest('li').classList.toggle('checked', dimAllTabs);
+      toggleDimAllTabsButton(dimAllTabs);
     });
 }
 
@@ -88,8 +92,7 @@ for (const [radioName, permission] of Object.entries(radioNameToPermissionMap)) 
 
 document.querySelector('button#dim-all-tabs').addEventListener('click', (e) => {
   const pressed = e.target.getAttribute('aria-pressed');
-  e.target.setAttribute('aria-pressed', pressed === 'true' ? 'false' : 'true');
-  e.target.closest('li').classList.toggle('checked');
+  toggleDimAllTabsButton(pressed === 'false');
 
   const checked = e.target.closest('li').classList.contains('checked');
   browser.storage.local.set({ dimAllTabs: checked });
