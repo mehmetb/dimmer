@@ -35,9 +35,17 @@ async function sendCommandToActiveTab(command, data) {
   });
 }
 
+function hideRadioOptions() {
+  document.querySelector('.radio-options').classList.add('hidden');
+}
+
+function showRadioOptions() {
+  document.querySelector('.radio-options').classList.remove('hidden');
+}
+
 async function loadState() {
   try {
-    const { state: { opacity, applySettingsToCurrentTab = false }} = await sendCommandToActiveTab('query');
+    const { state: { opacity, applySettingsToCurrentTab = false }, permissionState } = await sendCommandToActiveTab('query');
     rangeInput.value = opacity;
 
     if (applySettingsToCurrentTab) {
@@ -46,6 +54,12 @@ async function loadState() {
     } else {
       radioButtonForCurrentTab.checked = false;
       radioButtonForAllTabs.checked = true;
+    }
+
+    if (permissionState.hostPermissions) {
+      showRadioOptions();
+    } else {
+      hideRadioOptions();
     }
   } catch (ex) {
     console.error(ex.message);

@@ -160,3 +160,7 @@ div.back:hover {
 div.back:hover div.back-icon {
   background-color: #676774;
 }
+
+.radio-options.hidden {
+  display: none;
+}
