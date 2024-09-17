@@ -23,9 +23,6 @@ const undimButton = document.querySelector('button.default');
 const dimButton = document.querySelector('button.primary');
 const rangeInput = document.querySelector('input[type=range]');
 
-const radioButtonForAllTabs = document.querySelector('#radioAllTabs');
-const radioButtonForCurrentTab = document.querySelector('#radioCurrentTab');
-
 async function sendCommandToActiveTab(command, data) {
   return browser.runtime.sendMessage({
     command,
@@ -35,32 +32,10 @@ async function sendCommandToActiveTab(command, data) {
   });
 }
 
-function hideRadioOptions() {
-  document.querySelector('.radio-options').classList.add('hidden');
-}
-
-function showRadioOptions() {
-  document.querySelector('.radio-options').classList.remove('hidden');
-}
-
 async function loadState() {
   try {
-    const { state: { opacity, applySettingsToCurrentTab = false }, permissionState } = await sendCommandToActiveTab('query');
+    const { state: { opacity }} = await sendCommandToActiveTab('query');
     rangeInput.value = opacity;
-
-    if (applySettingsToCurrentTab) {
-      radioButtonForCurrentTab.checked = true;
-      radioButtonForAllTabs.checked = false;
-    } else {
-      radioButtonForCurrentTab.checked = false;
-      radioButtonForAllTabs.checked = true;
-    }
-
-    if (permissionState.hostPermissions) {
-      showRadioOptions();
-    } else {
-      hideRadioOptions();
-    }
   } catch (ex) {
     console.error(ex.message);
   }
@@ -80,26 +55,8 @@ async function onDimClicked() {
   window.close();
 }
 
-async function updateSettingsScope({ applyToAllTabs }) {
-  if (applyToAllTabs) {
-    await sendCommandToActiveTab('apply-settings-to-all-tabs');
-    await loadState();
-    return;
-  }
-
-  await sendCommandToActiveTab('apply-settings-to-current-tab-only');
-}
-
 rangeInput.addEventListener('input', onRangeChanged);
 dimButton.addEventListener('click', onDimClicked);
 undimButton.addEventListener('click', onUndimClicked);
-
-radioButtonForAllTabs.addEventListener('change', () => {
-  updateSettingsScope({ applyToAllTabs: true });
-});
-
-radioButtonForCurrentTab.addEventListener('change', () => {
-  updateSettingsScope({ applyToAllTabs: false });
-});
 
 loadState();
