@@ -148,8 +148,9 @@ body {
   align-items: center;
 }
 
-.settings-row > span.label-wrapper {
+.settings-row > span.label-wrapper, .settings-row button, .settings-row input {
   grid-row: 1;
+  user-select: none;
 }
 
 button.toggle-button::before {
@@ -173,7 +174,6 @@ button.toggle-button {
   border-radius: 9999px;
   background: color-mix(in srgb, currentColor 7%, transparent);
   box-sizing: border-box;
-  grid-row: 1;
   color: var(--text-color-deemphasized);
   cursor: default;
 }

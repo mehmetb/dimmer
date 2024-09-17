@@ -80,5 +80,10 @@
   "dontAllow": {
     "message": "Don't Allow",
     "description": "Radio button label for Don't Allow"
+  },
+  "defaultDimLevel": {
+    "message": "Default dim level",
+    "description": "Text of the relevant input in the Preferences tab."
+
   }
 }

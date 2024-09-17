@@ -44,11 +44,19 @@ function toggleDimAllTabsButton(check = false) {
   dimAllTabsButton.closest('li').classList.toggle('checked', check);
 }
 
+function updateDimLevelInputValue(value) {
+  const input = document.querySelector('input#defaultDimLevel');
+  if (!input) return;
+
+  input.value = value;
+}
+
 function getSettingsAndUpdateFormData() {
-  browser.storage.local.get('dimAllTabs')
+  browser.storage.local.get({ dimAllTabs: false, defaultDimLevel: 0.5 })
     .then((result) => {
-      const { dimAllTabs } = result;
+      const { dimAllTabs, defaultDimLevel } = result;
       toggleDimAllTabsButton(dimAllTabs);
+      updateDimLevelInputValue(defaultDimLevel);
     });
 }
 
@@ -96,6 +104,10 @@ document.querySelector('button#dim-all-tabs').addEventListener('click', (e) => {
 
   const checked = e.target.closest('li').classList.contains('checked');
   browser.storage.local.set({ dimAllTabs: checked });
+});
+
+document.querySelector('input#defaultDimLevel').addEventListener('change', (e) => {
+  browser.storage.local.set({ defaultDimLevel: e.target.value });
 });
 
 getAllPermissionsAndUpdateFormData();
