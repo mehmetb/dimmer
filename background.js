@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2023 Mehmet Baker
+ * Copyright 2020, 2021, 2023, 2024 Mehmet Baker
  *
  * This file is part of dimmer.
  *
@@ -33,6 +33,12 @@ const defaultSettings = {
 const initialState = {
   isDimmed: false,
   opacity: 0.7,
+};
+
+const permissionState = {
+  hostPermissions: false,
+  tabsPermission: false,
+  webRequestPermission: false,
 };
 
 /**
@@ -213,6 +219,7 @@ async function handleMessage(message, sender) {
       return {
         state: getState(activeTab.id),
         defaultSettings,
+        permissionState,
       };
     }
 
@@ -270,9 +277,51 @@ function handleTabRemove(tabId) {
   globalStateTabs.delete(tabId);
 }
 
+function getAllPermissions() {
+  browser.permissions.getAll()
+    .then((permissions) => {
+      permissionState.hostPermissions = permissions.origins.includes('<all_urls>');
+      permissionState.tabsPermission = permissions.permissions.includes('tabs');
+      permissionState.webRequestPermission = permissions.permissions.includes('webRequest');
+    })
+    .catch(console.trace);
+}
+
+function onPermissionAdded(permission) {
+  if (permission.origins.includes('<all_urls>')) {
+    permissionState.hostPermissions = true;
+  }
+
+  if (permission.permissions.includes('tabs')) {
+    permissionState.tabsPermission = true;
+  }
+
+  if (permission.permissions.includes('webRequest')) {
+    permissionState.webRequestPermission = true;
+  }
+}
+
+function onPermissionRemoved(permission) {
+  if (permission.origins.includes('<all_urls>')) {
+    permissionState.hostPermissions = false;
+  }
+
+  if (permission.permissions.includes('tabs')) {
+    permissionState.tabsPermission = false;
+  }
+
+  if (permission.permissions.includes('webRequest')) {
+    permissionState.webRequestPermission = false;
+  }
+}
+
 browser.commands.onCommand.addListener(handleCommand);
 browser.runtime.onMessage.addListener(handleMessage);
 browser.tabs.onRemoved.addListener(handleTabRemove);
+browser.permissions.onAdded.addListener(onPermissionAdded);
+browser.permissions.onRemoved.addListener(onPermissionRemoved);
+
+getAllPermissions();
 
 /**
  * @typedef {object} IncomingMessage

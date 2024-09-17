@@ -1,0 +1,84 @@
+{
+  "toggleAll": {
+    "message": "Toggle Dim (All tabs)",
+    "description": "The keyboard shortcut description text."
+  },
+  "toggleActiveOnly": {
+    "message": "Toggle Dim (Active tab only)",
+    "description": "The keyboard shortcut description text."
+  },
+  "dimLevel": {
+    "message": "Dim Level:",
+    "description": "The text shown next to the range input in the popup window."
+  },
+  "applySettingsTo": {
+    "message": "Apply settings to:",
+    "description": "Shown in the popup window."
+  },
+  "allTabs": {
+    "message": "All tabs",
+    "description": "Shown in the popup window: Apply settings to: All tabs"
+  },
+  "thisTabOnly": {
+    "message": "This tab only",
+    "description": "Shown in the popup window: Apply settings to: This tab only"
+  },
+  "btnDim": {
+    "message": "Dim",
+    "description": "Popup button text: Dim"
+  },
+  "btnDontDim": {
+    "message": "Don't Dim",
+    "description": "Popup button text: Don't Dim"
+  },
+  "optionalPermissions": {
+    "message": "Optional Permissions",
+    "description": "The section title in the Preferences tab."
+  },
+  "hostPermissions": {
+    "message": "Host Permissions"
+  },
+  "tabsPermission": {
+    "message": "Tabs Permission"
+  },
+  "webRequestPermissions": {
+    "message": "Web Request Permissions"
+  },
+  "enableHostPermissions": {
+    "message": "Enable host permissions",
+    "description": "Text of the relevant checkbox in the Preferences tab."
+  },
+  "enableHostPermissionsDescription": {
+    "message": "This permission allows dimmer to keep the tab dimmed after you visit a different website or refresh the same tab. Otherwise you will have to manually re-dim the page."
+  },
+  "enableTabsPermission": {
+    "message": "Enable tabs permission",
+    "description": "Text of the relevant checkbox in the Preferences tab."
+  },
+  "enableTabsPermissionDescription": {
+    "message": "This permission allows dimmer to get the URLs of each tab and show a different (disabled) logo when the browser doesn't allow dimmer to run (e.g. on Mozilla Add-ons pages)."
+  },
+  "enableWebRequestPermissions": {
+    "message": "Enable request monitoring and request blocking permissions",
+    "description": "Text of the relevant checkbox in the Preferences tab."
+  },
+  "enableWebRequestPermissionsDescription": {
+    "message": "These permissions allow dimmer to intercept PDF requests and redirect them to a custom PDF viewing page where you can dim the PDF. (Firefox doesn't allow add-ons to modify built-in PDF viewer data)"
+  },
+  "settings": {
+    "message": "Settings",
+    "description": "The section title in the Preferences tab."
+  },
+  "dimAllTabs": {
+    "message": "Dim all tabs when a tab is dimmed",
+    "description": "Text of the relevant checkbox in the Preferences tab."
+  },
+  "allow": {
+    "message": "Allow",
+    "description": "Radio button label for Allow"
+  },
+  "dontAllow": {
+    "message": "Don't Allow",
+    "description": "Radio button label for Don't Allow"
+  }
+}

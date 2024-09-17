@@ -5,8 +5,11 @@
   "main": "index.js",
   "scripts": {
     "build": "web-ext build --overwrite-dest -i \"*.code-workspace\" package.json README.md yarn.lock \"**-profile\" demo.gif _config.yml",
-    "dev": "env-cmd -x --use-shell web-ext run -u https://wikipedia.com --verbose --firefox-profile=\"\\$LIGHT_MODE_PROFILE\"",
+    "dev": "env-cmd -x --use-shell web-ext run -u https://wikipedia.com --verbose",
+    "dev-light": "env-cmd -x --use-shell web-ext run -u https://wikipedia.com --verbose --firefox-profile=\"\\$LIGHT_MODE_PROFILE\"",
+    "dev-light-save": "env-cmd -x --use-shell web-ext run -u https://wikipedia.com --verbose --firefox-profile=\"\\$LIGHT_MODE_PROFILE\" --keep-profile-changes",
     "dev-dark": "env-cmd -x web-ext run --verbose -u https://wikipedia.com --firefox-profile=\"\\$DARK_MODE_PROFILE\"",
+    "dev-dark-save": "env-cmd -x web-ext run --verbose -u https://wikipedia.com --firefox-profile=\"\\$DARK_MODE_PROFILE\" --keep-profile-changes",
     "lint": "eslint content_scripts/*.js popup/*.js background.js",
     "lint-fix": "eslint --fix content_scripts/*.js popup/*.js background.js",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -31,5 +34,6 @@
     "eslint-config-airbnb-base": "latest",
     "eslint-plugin-import": "latest",
     "web-ext": "latest"
-  }
+  },
+  "packageManager": "yarn@4.5.0"
 }
