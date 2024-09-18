@@ -1,5 +1,5 @@
 /**
- * Copyright 2020, 2021, 2023 Mehmet Baker
+ * Copyright 2020, 2021, 2023, 2024 Mehmet Baker
  *
  * This file is part of dimmer.
  *
@@ -21,111 +21,121 @@
 
 (function main() {
   const state = {
-    opacity: '.7',
-    isDimmed: false,
-    container: document.createElement('div'),
+    isDimmed: true,
+    opacity: 0.7,
   };
 
-  if (window.hasRun) {
-    return;
-  }
+  const container = document.createElement('div');
 
-  const toggleOverlay = function toggleOverlay() {
-    return new Promise((resolve) => {
-      // Toggle the flag
-      state.isDimmed = !state.isDimmed;
+  const toggleOverlay = () => {
+    // Toggle the flag
+    state.isDimmed = !state.isDimmed;
 
-      window.requestAnimationFrame(() => {
-        // Set transition
-        state.container.style.transition = 'opacity .3s';
+    window.requestAnimationFrame(() => {
+      // Set transition
+      container.style.transition = 'opacity .3s';
 
-        // Reset the transition property once the transition has ended
-        state.container.addEventListener('transitionend', () => {
-          state.container.style.transition = '';
-        }, { once: true });
+      // Reset the transition property once the transition has ended
+      container.addEventListener(
+        'transitionend',
+        () => {
+          container.style.transition = '';
+        },
+        { once: true }
+      );
 
-        // Set the opacity of overlay
-        state.container.style.opacity = state.isDimmed ? state.opacity : '0';
-
-        // Resolve the promise
-        resolve({
-          opacity: state.opacity,
-          isDimmed: state.isDimmed,
-        });
-      });
+      // Set the opacity of overlay
+      container.style.opacity = state.isDimmed ? state.opacity : '0';
     });
   };
 
-  // Running for the first time here
-  window.hasRun = true;
+  const sleep = (ms) => {
+    return new Promise((resolve) => {
+      setTimeout(resolve, ms);
+    });
+  };
 
-  state.container.style.position = 'fixed';
-  state.container.style.top = '0';
-  state.container.style.right = '0';
-  state.container.style.bottom = '0';
-  state.container.style.left = '0';
-  state.container.style.pointerEvents = 'none';
-  state.container.style.zIndex = Number.MAX_SAFE_INTEGER;
-  state.container.style.background = '#000';
-  state.container.style.opacity = '0';
+  const appendContainerToDOM = () => {
+    if (!document.body) {
+      return sleep(1).then(appendContainerToDOM);
+    }
+
+    document.body.appendChild(container);
+    return Promise.resolve();
+  };
+
+  const retrieveAndUpdateState = () => {
+    return browser.runtime.sendMessage({
+      to: 'background',
+      command: 'get-tab-state',
+    }).then((tabState) => {
+      console.info('Retrieved state:', tabState);
+      state.isDimmed = tabState.isDimmed;
+      state.opacity = tabState.opacity;
+    });
+  };
+
+  const init = () => {
+    container.style.position = 'fixed';
+    container.style.top = '0';
+    container.style.right = '0';
+    container.style.bottom = '0';
+    container.style.left = '0';
+    container.style.pointerEvents = 'none';
+    container.style.zIndex = Number.MAX_SAFE_INTEGER;
+    container.style.background = '#000';
+    container.style.opacity = '0';
+
+    Promise.all([
+      retrieveAndUpdateState(),
+      appendContainerToDOM(),
+    ])
+    .then(() => {
+      container.style.opacity = state.isDimmed ? state.opacity : '0';
+      return sleep(300);
+    })
+    .then(() => {
+      container.style.transition = 'opacity .3s';
+    })
+    .catch((ex) => {
+      console.trace(ex);
+      console.error('Dimmer failed to initialize.');
+    });
+  };
+
+  init();
 
   browser.runtime.onMessage.addListener((message) => {
-    if (message.to !== 'content_script') {
-      return Promise.resolve(null);
+    if (message.to !== 'content-script') {
+      return;
     }
 
     switch (message.command) {
-      case 'set-state': {
+      case 'set-opacity': {
         state.opacity = message.data.opacity;
+        container.style.opacity = state.isDimmed ? state.opacity : '0';
+        break;
+      }
 
-        if (state.isDimmed) {
-          state.container.style.opacity = state.opacity;
-        }
-
-        if (state.isDimmed !== message.data.isDimmed) {
-          toggleOverlay(state);
+      case 'dim': {
+        if (!state.isDimmed) {
+          toggleOverlay();
         }
 
         break;
       }
 
-      default:
+      case 'undim': {
+        if (state.isDimmed) {
+          toggleOverlay();
+        }
+
         break;
-    }
+      }
 
-    return Promise.resolve(null);
+      default: {
+        break;
+      }
+    }
   });
-
-  async function init() {
-    try {
-      const response = await browser.runtime.sendMessage({
-        command: 'query',
-        from: 'content_script',
-        to: 'background',
-      });
-
-      state.isDimmed = !!response.state.isDimmed;
-      state.opacity = String(response.state.opacity) || '0';
-      state.container.style.opacity = state.isDimmed ? state.opacity : '0';
-
-      setTimeout(() => {
-        state.container.style.transition = 'opacity .3s';
-      }, 300);
-    } catch (ex) {
-      console.error('Dimmer failed to initialize.');
-    }
-  }
-
-  init();
-
-  function appendContainerToDOM() {
-    if (!document.body) {
-      setTimeout(appendContainerToDOM);
-      return;
-    }
-
-    document.body.appendChild(state.container);
-  }
-
-  appendContainerToDOM();
-}());
+})();

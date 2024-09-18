@@ -19,8 +19,14 @@
 
 /* global browser */
 
+const DEFAULT_SETTINGS = {
+  dimUndimAllTabsSimultaneously: false,
+  defaultDimLevel: 0.7,
+};
+
 const radioNameToPermissionMap = {
   'host-permissions': { origins: ['<all_urls>'] },
+  'scripting-permission': { permissions: ['scripting'] },
   'tabs-permission': { permissions: ['tabs'] },
   'webrequest-permissions': { permissions: ['webRequest'] },
 };
@@ -52,10 +58,10 @@ function updateDimLevelInputValue(value) {
 }
 
 function getSettingsAndUpdateFormData() {
-  browser.storage.local.get({ dimAllTabs: false, defaultDimLevel: 0.5 })
+  browser.storage.local.get(DEFAULT_SETTINGS)
     .then((result) => {
-      const { dimAllTabs, defaultDimLevel } = result;
-      toggleDimAllTabsButton(dimAllTabs);
+      const { dimUndimAllTabsSimultaneously, defaultDimLevel } = result;
+      toggleDimAllTabsButton(dimUndimAllTabsSimultaneously);
       updateDimLevelInputValue(defaultDimLevel);
     });
 }
@@ -64,12 +70,24 @@ function getAllPermissionsAndUpdateFormData() {
   browser.permissions.getAll()
     .then((permissions) => {
       const hostPermission = permissions.origins.includes('<all_urls>');
+      const scriptingPermission = permissions.permissions.includes('scripting');
       const tabsPermission = permissions.permissions.includes('tabs');
       const webRequestPermission = permissions.permissions.includes('webRequest');
 
       checkUncheckRadios('host-permissions', hostPermission);
+      checkUncheckRadios('scripting-permission', scriptingPermission);
       checkUncheckRadios('tabs-permission', tabsPermission);
       checkUncheckRadios('webrequest-permissions', webRequestPermission);
+
+      document.querySelectorAll('[data-requires="host-permissions"]').forEach((el) => {
+        el.classList.toggle('disabled', !hostPermission);
+
+        if (!hostPermission) {
+          el.setAttribute('title', browser.i18n.getMessage('dimAllTabsDisabledTooltip'));
+        } else {
+          el.removeAttribute('title');
+        }
+      });
     })
     .catch((error) => {
       console.trace(error);
@@ -99,11 +117,13 @@ for (const [radioName, permission] of Object.entries(radioNameToPermissionMap)) 
 }
 
 document.querySelector('button#dim-all-tabs').addEventListener('click', (e) => {
+  if (e.target.closest('.settings-row').classList.contains('disabled')) return;
+
   const pressed = e.target.getAttribute('aria-pressed');
   toggleDimAllTabsButton(pressed === 'false');
 
   const checked = e.target.closest('li').classList.contains('checked');
-  browser.storage.local.set({ dimAllTabs: checked });
+  browser.storage.local.set({ dimUndimAllTabsSimultaneously: checked });
 });
 
 document.querySelector('input#defaultDimLevel').addEventListener('change', (e) => {

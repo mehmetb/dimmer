@@ -257,3 +257,11 @@ ul li.checked {
     --toggle-dot-background-color-pressed: #1c1b22;
   }
 }
+
+.disabled {
+  opacity: .5;
+}
+
+.disabled button, .disabled input {
+  pointer-events: none;
+}

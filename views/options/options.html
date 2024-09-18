@@ -53,6 +53,28 @@
 
       <div class="settings-group">
         <div class="setting-name-and-radios">
+          <span data-i18n-message-id="scriptingPermission"></span>
+
+          <div class="radios">
+            <label>
+              <input type="radio" name="scripting-permission" value="1" />
+              <span data-i18n-message-id="allow"></span>
+            </label>
+
+            <label>
+              <input type="radio" name="scripting-permission" value="0" checked />
+              <span data-i18n-message-id="dontAllow"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="settings-help">
+          <p data-i18n-message-id="scriptingPermissionDescription"></p>
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <div class="setting-name-and-radios">
           <span data-i18n-message-id="tabsPermission"></span>
 
           <div class="radios">
@@ -100,7 +122,7 @@
 
         <ul>
           <li>
-            <div class="settings-row">
+            <div class="settings-row" data-requires="host-permissions">
               <span class="label-wrapper">
                 <label for="dim-all-tabs" data-i18n-message-id="dimAllTabs"></label>
               </span>

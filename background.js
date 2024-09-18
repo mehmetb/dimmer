@@ -19,153 +19,101 @@
 
 /* global browser */
 
-/**
- * @typedef {object} TabState
- * @property {boolean} isDimmed
- * @property {number} opacity A number [0, 1]
- * @property {boolean} [applySettingsToCurrentTab] If true, popup option 'Apply settings to this tab only' will be checked.
- */
-
-const defaultSettings = {
-  applyToAllTabs: true,
+const DEFAULT_SETTINGS = {
+  dimUndimAllTabsSimultaneously: false,
+  defaultDimLevel: 0.7,
 };
 
-const initialState = {
-  isDimmed: false,
-  opacity: 0.7,
-};
+function getActiveTab() {
+  return browser.tabs
+    .query({ active: true, currentWindow: true })
+    .then((tabs) => {
+      if (tabs.length > 0) {
+        return Promise.resolve(tabs[0]);
+      }
 
-const permissionState = {
-  hostPermissions: false,
-  tabsPermission: false,
-  webRequestPermission: false,
-};
-
-/**
- * This state is the state of tabs that checked 'Apply settings to all tabs' option.
- */
-const globalState = {
-  ...initialState,
-};
-
-/**
- * These states are of tabs that checked the 'Apply settings to this tab only' option.
- * Keys are tab ids and values are states.
- * @type {Map<number, TabState>}
- */
-const localStateTabs = new Map();
-
-const globalStateTabs = new Set();
-
-/**
- * Returns a tab's state.
- * @param {number} tabId Tab ID
- * @returns {TabState}
- */
-function getState(tabId) {
-  if (localStateTabs.has(tabId)) {
-    return {
-      ...localStateTabs.get(tabId),
-      applySettingsToCurrentTab: true,
-    };
-  }
-
-  return globalState;
+      return Promise.resolve();
+    });
 }
 
-/**
- * Adds/updates the overridden states
- * @param {number} tabId Tab ID.
- * @param {{ isDimmed?: boolean, opacity?: number }} params Prop(s) of TabState
- */
-function extendState(tabId, params = {}) {
-  const state = getState(tabId);
-  localStateTabs.set(tabId, {
-    ...state,
-    ...params,
+function getAllTabsToDimUndim() {
+  return browser.storage.local.get(DEFAULT_SETTINGS).then((data) => {
+    if (data.dimUndimAllTabsSimultaneously) {
+      return browser.tabs.query({});
+    }
+
+    return getActiveTab().then((tab) => {
+      if (!tab || tab.id === browser.tabs.TAB_ID_NONE) {
+        return Promise.reject(new Error('Failed to get active tab'));
+      }
+
+      return Promise.resolve([tab]);
+    });
   });
 }
 
-/**
- * Updates the state object in the background script. Also updates the states of content
- * scripts by sending them set-state commands.
- * @param {number} tabId Tab ID
- * @param {('isDimmed'|'opacity')|null} stateProp A property key of TabState
- * @param {boolean|number} [propValue] A prop value of TabState
- * @returns {Promise<void>}
- */
-async function setState(tabId, stateProp, propValue) {
-  // If 'Apply settings to this tab only' option is selected, update the current tab only
-  if (localStateTabs.has(tabId)) {
-    const state = getState(tabId);
-
-    if (stateProp !== null) {
-      state[stateProp] = propValue;
-      localStateTabs.set(tabId, state);
-    }
-
-    await browser.tabs.sendMessage(tabId, {
-      command: 'set-state',
-      from: 'background',
-      to: 'content_script',
-      data: {
-        isDimmed: state.isDimmed,
-        opacity: state.opacity,
-      },
+function getDefaultState() {
+  return browser.storage.local.get(DEFAULT_SETTINGS).then((defaultSettings) => {
+    return Promise.resolve({
+      isDimmed: false,
+      opacity: defaultSettings.defaultDimLevel,
     });
+  });
+}
 
-    return;
-  }
-
-  // If 'Apply settings to all tabs' option is checked then update all the other tabs
-  // that checked 'Apply settings to all tabs' option as well.
-  if (stateProp !== null) {
-    globalState[stateProp] = propValue;
-  }
-
-  const allTabs = await browser.tabs.query({});
-  const promises = [];
-  const command = {
-    command: 'set-state',
-    from: 'background',
-    to: 'content_script',
-    data: {
-      isDimmed: globalState.isDimmed,
-      opacity: globalState.opacity,
-    },
-  };
-
-  for (const tab of allTabs) {
-    const isOverridden = localStateTabs.has(tab.id);
-    if (!isOverridden) {
-      const promise = browser.tabs.sendMessage(tab.id, command);
-      promises.push(promise);
+function getTabState(tabId) {
+  const stateKey = `tabState_${tabId}`;
+  return browser.storage.session.get(stateKey).then((data) => {
+    if (data[stateKey]) {
+      return Promise.resolve(data[stateKey]);
     }
-  }
 
-  await Promise.all(promises);
+    return getDefaultState();
+  });
 }
 
-/**
- * Returns the current tab.
- * @returns {object} Active Tab Object
- * @see {@link https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/tabs/Tab}
- */
-async function getActiveTab() {
-  const tabs = await browser.tabs.query({ active: true, currentWindow: true });
-
-  if (tabs.length !== 1) {
-    throw new Error('Failed to get active tab');
-  }
-
-  return tabs[0];
+function updateTabState(tabId, state) {
+  const key = `tabState_${tabId}`;
+  browser.storage.session.get(key).then((data) => {
+    browser.storage.session.set({ [key]: { ...data[key], ...state } });
+  });
 }
 
-/**
- * Handle the keyboard shortcut. (See the manifest file for the default shortcut)
- * @param {string} commandName
- * @returns {Promise<void>}
- */
+function dimTab(tabId) {
+  browser.tabs.sendMessage(tabId, { command: 'dim', to: 'content-script' });
+  updateTabState(tabId, { isDimmed: true });
+}
+
+function undimTab(tabId) {
+  browser.tabs.sendMessage(tabId, { command: 'undim', to: 'content-script' });
+  updateTabState(tabId, { isDimmed: false });
+}
+
+function setTabOpacity(tabId, opacity) {
+  browser.tabs.sendMessage(tabId, {
+    command: 'set-opacity',
+    to: 'content-script',
+    data: { opacity },
+  });
+  updateTabState(tabId, { opacity });
+}
+
+function onClickDimFromPopup() {
+  getAllTabsToDimUndim().then((tabs) =>
+    Promise.all(tabs.map((tab) => dimTab(tab.id)))
+  );
+}
+
+function onClickUndimFromPopup() {
+  getAllTabsToDimUndim().then((tabs) =>
+    Promise.all(tabs.map((tab) => undimTab(tab.id)))
+  );
+}
+
+function onChangeOpacityFromPopup(opacity) {
+  getActiveTab().then((tab) => setTabOpacity(tab.id, opacity));
+}
+
 async function handleCommand(commandName) {
   switch (commandName) {
     case 'Toggle Dim (All tabs)': {
@@ -192,78 +140,39 @@ async function handleCommand(commandName) {
   }
 }
 
-/**
- * Handles incoming messages from content scripts and popup window.
- * @param {IncomingMessage} message
- * @param {*} sender Sender tab. For more information please visit the link below.
- * @see {@link https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/runtime/onMessage#parameters}
- * @returns {Promise<void>}
- */
-async function handleMessage(message, sender) {
+function handleMessage(message, sender) {
   if (message.to !== 'background') {
-    return Promise.resolve();
+    return;
   }
 
-  const activeTab = sender.tab || await getActiveTab();
-
   switch (message.command) {
-    case 'query': {
-      if (!localStateTabs.has(activeTab.id) && !globalStateTabs.has(activeTab.id)) {
-        if (defaultSettings.applyToAllTabs) {
-          globalStateTabs.add(activeTab.id);
-        } else {
-          localStateTabs.set(activeTab.id, { ...initialState });
-        }
-      }
+    case 'get-tab-state': {
+      return getTabState(sender.tab.id);
+    }
 
-      return {
-        state: getState(activeTab.id),
-        defaultSettings,
-        permissionState,
-      };
+    case 'get-active-tab-state': {
+      return getActiveTab().then((tab) => {
+        if (!tab || tab.id === browser.tabs.TAB_ID_NONE) {
+          return Promise.reject(new Error('Failed to get active tab'));
+        }
+
+        return getTabState(tab.id);
+      });
     }
 
     case 'dim': {
-      return setState(activeTab.id, 'isDimmed', true);
+      onClickDimFromPopup();
+      break;
     }
 
     case 'undim': {
-      return setState(activeTab.id, 'isDimmed', false);
+      onClickUndimFromPopup();
+      break;
     }
 
     case 'set-opacity': {
-      console.debug('setting opacity', message.data.opacity);
-      return setState(activeTab.id, 'opacity', message.data.opacity);
-    }
-
-    case 'apply-settings-to-current-tab-only': {
-      globalStateTabs.delete(activeTab.id);
-      extendState(activeTab.id);
-      return Promise.resolve();
-    }
-
-    case 'apply-settings-to-all-tabs': {
-      // get the current state of the tab
-      const tabState = localStateTabs.get(activeTab.id);
-
-      if (tabState) {
-        // update global state settings to match the current tab's state
-        globalState.isDimmed = tabState.isDimmed;
-        globalState.opacity = tabState.opacity;
-      }
-
-      // remove the current tab from the ovveriden map so it can get global state changes in the future
-      localStateTabs.delete(activeTab.id);
-      globalStateTabs.add(activeTab.id);
-
-      // calling `setState` with `null` will cause all tabs that don't choose 'Apply settings to this tab only' to get
-      // the latest gloabl state
-      return setState(activeTab.id, null);
-    }
-
-    case 'update-default-settings': {
-      defaultSettings.applyToAllTabs = message.data.applyToAllTabs;
-      return Promise.resolve({ defaultSettings, message });
+      onChangeOpacityFromPopup(message.data.opacity);
+      break;
     }
 
     default: {
@@ -273,58 +182,20 @@ async function handleMessage(message, sender) {
 }
 
 function handleTabRemove(tabId) {
-  localStateTabs.delete(tabId);
-  globalStateTabs.delete(tabId);
-}
-
-function getAllPermissions() {
-  browser.permissions.getAll()
-    .then((permissions) => {
-      permissionState.hostPermissions = permissions.origins.includes('<all_urls>');
-      permissionState.tabsPermission = permissions.permissions.includes('tabs');
-      permissionState.webRequestPermission = permissions.permissions.includes('webRequest');
-    })
-    .catch(console.trace);
-}
-
-function onPermissionAdded(permission) {
-  if (permission.origins.includes('<all_urls>')) {
-    permissionState.hostPermissions = true;
-  }
-
-  if (permission.permissions.includes('tabs')) {
-    permissionState.tabsPermission = true;
-  }
-
-  if (permission.permissions.includes('webRequest')) {
-    permissionState.webRequestPermission = true;
-  }
-}
-
-function onPermissionRemoved(permission) {
-  if (permission.origins.includes('<all_urls>')) {
-    permissionState.hostPermissions = false;
-  }
-
-  if (permission.permissions.includes('tabs')) {
-    permissionState.tabsPermission = false;
-  }
-
-  if (permission.permissions.includes('webRequest')) {
-    permissionState.webRequestPermission = false;
-  }
+  browser.storage.session.remove(`tabState_${tabId}`);
 }
 
 browser.commands.onCommand.addListener(handleCommand);
 browser.runtime.onMessage.addListener(handleMessage);
 browser.tabs.onRemoved.addListener(handleTabRemove);
-browser.permissions.onAdded.addListener(onPermissionAdded);
-browser.permissions.onRemoved.addListener(onPermissionRemoved);
 
-getAllPermissions();
-
-/**
- * @typedef {object} IncomingMessage
- * @property {string} command
- * @property {{ opacity?: number }} [data]
- */
+browser.scripting.registerContentScripts([
+  {
+    id: 'dimmer-overlay',
+    js: ['/content_scripts/overlay.js'],
+    matches: ['<all_urls>'],
+    matchOriginAsFallback: true,
+    runAt: 'document_start',
+    world: browser.scripting.ExecutionWorld.ISOLATED,
+  },
+]);

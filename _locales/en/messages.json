@@ -49,7 +49,7 @@
     "description": "Text of the relevant checkbox in the Preferences tab."
   },
   "enableHostPermissionsDescription": {
-    "message": "This permission allows dimmer to keep the tab dimmed after you visit a different website or refresh the same tab. Otherwise you will have to manually re-dim the page."
+    "message": "This permission allows dimmer to keep the tab dimmed after you visit a different website or refresh the same tab. The \"Dim all tabs when a tab is dimmed\" setting requires this permission as well."
   },
   "enableTabsPermission": {
     "message": "Enable tabs permission",
@@ -72,6 +72,17 @@
   "dimAllTabs": {
     "message": "Dim all tabs when a tab is dimmed",
     "description": "Text of the relevant checkbox in the Preferences tab."
+  },
+  "dimAllTabsDisabledTooltip": {
+    "message": "When you turn this feature on, the extension injects the dimmer code into all the websites you visit, which allows the extension to dim all the tabs when you dim one of them. \n\nHowever, if Host Permissions aren't allowed, the browser doesn't allow the extension to inject code into tabs you haven't manually activated the extension on.",
+    "description": "Text of the relevant checkbox in the Preferences tab."
+  },
+  "scriptingPermission": {
+    "message": "Scripting permission",
+    "description": "The section title in the Preferences tab."
+  },
+  "scriptingPermissionDescription": {
+    "message": "For content script injecting"
   },
   "allow": {
     "message": "Allow",

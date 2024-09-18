@@ -32,13 +32,11 @@ async function sendCommandToActiveTab(command, data) {
   });
 }
 
-async function loadState() {
-  try {
-    const { state: { opacity }} = await sendCommandToActiveTab('query');
-    rangeInput.value = opacity;
-  } catch (ex) {
-    console.error(ex.message);
-  }
+function loadState() {
+  sendCommandToActiveTab('get-active-tab-state')
+    .then(({ opacity }) => {
+      rangeInput.value = opacity;
+    })
 }
 
 function onRangeChanged() {
